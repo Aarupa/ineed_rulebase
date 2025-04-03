@@ -17,6 +17,7 @@ from django.template.loader import get_template # type: ignore
 import logging
 from django.http import HttpRequest # type: ignore
 from textblob import TextBlob # type: ignore
+from datetime import datetime
 
 # ChatterBot imports
 from chatterbot import ChatBot # type: ignore
@@ -159,6 +160,64 @@ def generate_nlp_response(msg):
     else:
         return "Could you clarify your question? I'm happy to help!"
 
+def get_event_status():
+    """Determine upcoming, current, and past events based on the current date and time."""
+    # Load datafest.json
+    datafest_path = os.path.join(script_dir, 'datafest.json')
+    with open(datafest_path, 'r') as file:
+        datafest = json.load(file)
+
+    # Parse current date and time
+    now = datetime.now()
+
+    upcoming_events = []
+    current_events = []
+    past_events = []
+
+    print(f"upcomming: {upcoming_events}")
+    for trainer in datafest.get("trainers", []):
+        event_date = datetime.strptime(trainer["date"], "%d %B")
+        event_date = event_date.replace(year=now.year)  # Assume events are in the current year
+        event_start_time = datetime.strptime(trainer["time"].split(" to ")[0], "%I %p").time()
+        event_end_time = datetime.strptime(trainer["time"].split(" to ")[1], "%I %p").time()
+
+        event_start = datetime.combine(event_date, event_start_time)
+        event_end = datetime.combine(event_date, event_end_time)
+
+        if event_start > now:
+            upcoming_events.append(trainer)
+        elif event_start <= now <= event_end:
+            current_events.append(trainer)
+        else:
+            past_events.append(trainer)
+
+    return {
+        "upcoming": upcoming_events,
+        "current": current_events,
+        "past": past_events
+    }
+
+def handle_event_query(event_type):
+    """Handle user queries for upcoming, current, or past events."""
+    events = get_event_status()
+    if event_type == "upcoming":
+        return events["upcoming"]
+    elif event_type == "current":
+        return events["current"]
+    elif event_type == "past":
+        return events["past"]
+    return []
+
+def find_event_by_topic_or_course(query):
+    """Find events by topic or course name."""
+    events = get_event_status()
+    all_events = events["upcoming"] + events["current"] + events["past"]
+
+    for event in all_events:
+        if query.lower() in event["topic"].lower():
+            return event
+    return None
+
 @csrf_exempt
 def get_response(request):
     """Handle HTTP requests and return chatbot responses as JSON."""
@@ -180,7 +239,48 @@ def get_response(request):
                 conversation_history.append((user_message, response)) # Store conversation history
                 return JsonResponse({'text': response})
             
-            
+            # Handle event-related queries
+            if "upcoming events" in user_message.lower():
+                upcoming_events = handle_event_query("upcoming")
+                if upcoming_events:
+                    response = "Our upcoming events are:\n" + "\n".join(
+                        [f"'{event['topic']}' on {event['date']} by {event['name']}" for event in upcoming_events]
+                    )
+                else:
+                    response = "There are no upcoming events."
+                return JsonResponse({'text': response})
+
+            elif "current events" in user_message.lower():
+                current_events = handle_event_query("current")
+                if current_events:
+                    response = "Here are the current events:\n" + "\n".join(
+                        [f"{event['name']} on {event['date']} at {event['time']} - {event['topic']}" for event in current_events]
+                    )
+                else:
+                    response = "There are no ongoing events right now."
+                return JsonResponse({'text': response})
+
+            elif "past events" in user_message.lower():
+                past_events = handle_event_query("past")
+                if past_events:
+                    response = "Here are the past events:\n" + "\n".join(
+                        [f"{event['name']} on {event['date']} at {event['time']} - {event['topic']}" for event in past_events]
+                    )
+                else:
+                    response = "There are no past events."
+                return JsonResponse({'text': response})
+
+            # Handle queries by topic or course
+            event = find_event_by_topic_or_course(user_message)
+            if event:
+                if event in get_event_status()["upcoming"]:
+                    response = f"Yes, '{event['topic']}' is an upcoming event. You can join it through our portal or YouTube channel."
+                elif event in get_event_status()["current"]:
+                    response = f"Yes, '{event['topic']}' is currently ongoing. You can join it through our portal or YouTube channel."
+                else:
+                    response = f"'{event['topic']}' was a past event. Stay tuned for similar events in the future!"
+                return JsonResponse({'text': response})
+
             response = generate_nlp_response(user_message)
             conversation_history.append((user_message, response)) # Store conversation history
             return JsonResponse({'text': response})

@@ -1,0 +1,87 @@
+{
+    "trainers": [
+      {
+        "name": "Dr. Sachin Kumar Saxena",
+        "date": "2 April",
+        "time": "11 am to 12 pm",
+        "topic": "From Learning to Earning: Azure Data Engineering Career Guide",
+        "linkedin": "https://www.linkedin.com/in/sachin-saxena-graphic-designer/",
+        "contact": "8909603708",
+        "introduction": "Dr. Sachin Saxena is a Senior Data Analyst at Teleperformance, Portugal, with a strong focus on machine learning and data science. He possesses expertise in various technical tools, leveraging his skills to drive data-driven solutions and innovations."
+      },
+      {
+        "name": "T P Dilip Kumar",
+        "date": "3 April",
+        "time": "1:30 pm to 2:30 pm",
+        "topic": "Leadership and Marketing",
+        "panel_discussion": "Data Driven Decision Making in Business",
+        "linkedin": "https://www.linkedin.com/in/dilipkumar-t-p-1b66021a9",
+        "contact": "9884353988",
+        "introduction": "Mr. T P Dilip Kumar is a seasoned business leader specializing in strategy, people management, and sales excellence, with 20+ years of experience. As a consultant and coach, he empowers individuals and organizations with tailored learning solutions, leadership training, and strategic growth strategies for lasting success."
+      },
+      {
+        "name": "Nimit Singh",
+        "date": "4 April",
+        "time": "3 pm to 5 pm",
+        "panel_discussion": "Data Driven Decision Making in Business",
+        "linkedin": "https://www.linkedin.com/in/nimit-singh-119189184",
+        "contact": "7905983140",
+        "introduction": "Mr. Nimit Singh is a skilled Technical Trainer with expertise in delivering comprehensive training on various technical subjects. With a passion for teaching and a strong understanding of the latest technologies, he is dedicated to empowering individuals with the skills needed to excel in their careers."
+      },
+      {
+        "name": "Shivaleela Annamalai",
+        "date": "5 April",
+        "time": "11 am to 12 pm",
+        "topic": "Personality Development and Interview Skills",
+        "linkedin": "https://www.linkedin.com/in/shivaleela-annamalai-bab3a9172/",
+        "contact": "9500614488",
+        "introduction": "Shivaleela Annamalai is an expert in Personality Development & Interview Skills, helping individuals build confidence, master communication, and achieve career success through corporate training, leadership growth, and mindset coaching."
+      },
+      {
+        "name": "Akshay Goud",
+        "date": "7 April",
+        "time": "10 am to 11 am",
+        "topic": "Teamwork and Public Speaking",
+        "linkedin": "https://www.linkedin.com/in/akshay-goud-aa8386110",
+        "contact": "9920736752",
+        "introduction": "Mr. Akshay Goud, the Founder and Director of Guidance Group, established the venture in 2016 with a mission to guide young minds in making informed career choices. An engineer by background, he brings extensive experience in EdTech and beyond, emphasizing teamwork, communication, and a disciplined approach to success."
+      },
+      {
+        "name": "Moin Anis Hassanfatta",
+        "date": "10 April",
+        "time": "10 am to 11 am",
+        "topic": "Full Stack MERN",
+        "linkedin": "linkedin.com/in/moin-hasanfatta-293512248",
+        "contact": "8788551512",
+        "introduction": "Moin Anis Hassanfatta is a passionate CBSE Financial Literacy Trainer and a skilled tech educator specializing in Full Stack MERN development. With expertise in adapting to evolving technologies, he empowers learners by providing real-world applications, technical mastery, and freelancing opportunities, while emphasizing the importance of teamwork in achieving success."
+      },
+      {
+        "name": "Mr. Smaranjit Ghose",
+        "date": "4 April",
+        "time": "11 am to 12 pm",
+        "topic": "Looking into GenAI from 2025",
+        "panel_discussion": "Data Driven Decision Making in Business",
+        "linkedin": "https://www.linkedin.com/in/smaranjitghose",
+        "contact": "8777254191",
+        "introduction": "Mr. Smaranjit Ghose is a seasoned data scientist and AI expert with extensive experience in building scalable AI solutions, leading tech teams, and mentoring thousands in data science and development. As a freelancer and consultant, he helps organizations navigate advancements in Generative AI and its applications, shaping its future impact in the industry."
+      },
+      {
+        "name": "Mr. Peeyush Pareek",
+        "date": "5 April",
+        "time": "10 am to 11 am",
+        "topic": "Mobile Application Development",
+        "linkedin": "https://www.linkedin.com/in/peeyush-pareek-b83699139",
+        "contact": "8875021439",
+        "introduction": "Mr. Peeyush Pareek is a senior faculty, technical writer, and technical trainer with extensive experience in academia and IT. Specializing in mobile app development and system administration, he has guided students and professionals, empowering them to break barriers and build confidence in the tech world."
+      },
+      {
+        "name": "Mr. Mohan Bhide",
+        "date": "5 April",
+        "time": "2 pm to 3 pm",
+        "topic": "Challenge of 2030",
+        "contact": "9881096664",
+        "introduction": "Mr. Mohan Bhalchandra Bhide is the Director of Swami Vivekananda Educational Institute. With 10 years of industrial experience in project and maintenance of chemical plants, he has spent the last 22 years in the educational field, specializing in teaching entrance and competitive exams like JEE, NEET, CLAT, and NDA."
+      }
+    ]
+  }
+  
