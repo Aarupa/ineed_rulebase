@@ -36,6 +36,18 @@ json_path = os.path.join(script_dir, 'content.json')
 with open(json_path, 'r') as json_data:
     faq_data = json.load(json_data)
 
+datafest_path = os.path.join(script_dir, 'datafest.json')
+with open(datafest_path, 'r') as file:
+        datafest = json.load(file)
+
+# Load DataFest FAQ data
+datafest_faq_path = os.path.join(script_dir, 'datafest.json')
+with open(datafest_faq_path, 'r') as file:
+    datafest_faq_data = json.load(file)
+
+# Combine FAQ data from both files
+combined_faq_data = faq_data['faqs'] + datafest_faq_data['faqs']
+
 # Use the same directory as content.json for corpus files
 corpus_path = script_dir  
 
@@ -83,23 +95,22 @@ def get_best_match(query, choices, threshold=80, min_length=2):
 
 def classify_query(msg):
     """Classify the query as company-related (FAQ) or general conversation."""
-    msg_lower = msg.lower() 
+    msg_lower = msg.lower()
 
-    
-    keywords = [keyword for faq in faq_data['faqs'] for keyword in faq['keywords']]
-    best_match = get_best_match(msg_lower, keywords) 
+    keywords = [keyword for faq in combined_faq_data for keyword in faq['keywords']]
+    best_match = get_best_match(msg_lower, keywords)
 
     corrected_msg = correct_spelling(msg_lower)
 
     if corrected_msg != msg_lower:
-        for faq in faq_data['faqs']:
+        for faq in combined_faq_data:
             if best_match in faq['keywords']:
                 suggested_question = faq['question']
                 response = random.choice(faq['responses'])
-                return "company", f"Did you mean '{suggested_question}'?\n {response}" 
-    
+                return "company", f"Did you mean '{suggested_question}'?\n {response}"
+
     if best_match:
-        for faq in faq_data['faqs']:
+        for faq in combined_faq_data:
             if best_match in faq['keywords']:
                 response = random.choice(faq['responses'])
                 return "company", response
@@ -162,28 +173,26 @@ def generate_nlp_response(msg):
 
 def get_event_status():
     """Determine upcoming, current, and past events based on the current date and time."""
-    # Load datafest.json
-    datafest_path = os.path.join(script_dir, 'datafest.json')
-    with open(datafest_path, 'r') as file:
-        datafest = json.load(file)
-
-    # Parse current date and time
-    now = datetime.now()
+    now = datetime.now()  # Get the current date and time
 
     upcoming_events = []
     current_events = []
     past_events = []
 
-    print(f"upcomming: {upcoming_events}")
     for trainer in datafest.get("trainers", []):
+        # Parse the event date
         event_date = datetime.strptime(trainer["date"], "%d %B")
         event_date = event_date.replace(year=now.year)  # Assume events are in the current year
+
+        # Parse the event start and end times
         event_start_time = datetime.strptime(trainer["time"].split(" to ")[0], "%I %p").time()
         event_end_time = datetime.strptime(trainer["time"].split(" to ")[1], "%I %p").time()
 
+        # Combine date and time for start and end
         event_start = datetime.combine(event_date, event_start_time)
         event_end = datetime.combine(event_date, event_end_time)
 
+        # Categorize events based on the current date and time
         if event_start > now:
             upcoming_events.append(trainer)
         elif event_start <= now <= event_end:

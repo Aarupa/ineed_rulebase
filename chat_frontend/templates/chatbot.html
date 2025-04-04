@@ -9,28 +9,108 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #f7f7f7;
+            background-color: black;
             margin: 0;
             padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .mic-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #mic-btn {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0.8));
+            border: none;
+            cursor: pointer;
+            outline: none;
+            position: relative;
+            padding: 20px;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        #mic-btn:hover {
+            transform: scale(1.1);
+        }
+
+        #mic-btn.active {
+            animation: siri-pulse 1.5s infinite;
+            background: radial-gradient(circle, rgba(0, 255, 0, 0.3));
+        }
+
+        #mic-btn i {
+            font-size: 80px;
+            color: white;
+            animation: mic-glow 1.5s infinite;
+        }
+
+        #mic-btn.active i {
+            animation: mic-active-glow 1.5s infinite;
+            color: #00ff00; /* Green glow for active state */
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        @keyframes siri-pulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 255, 0, 0.8);
+            }
+        }
+
+        @keyframes mic-glow {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes mic-active-glow {
+            0%, 100% {
+                box-shadow: 0 0 25px rgba(0, 255, 0, 0.8);
+            }
+            50% {
+                box-shadow: 0 0 35px rgba(0, 255, 0, 1);
+            }
         }
 
         .chat-container {
+            display: none;
+            flex-direction: column;
             max-width: 800px;
             width: 100%;
-            margin: 50px auto;
+            margin: 0 auto;
             background: linear-gradient(145deg, #ffffff, #e6e6e6);
             padding: 30px;
             border-radius: 12px;
             box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2), -10px -10px 20px rgba(255, 255, 255, 0.5);
-            display: flex;
-            flex-direction: column;
             height: 80vh;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .chat-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 15px 15px 30px rgba(0, 0, 0, 0.3), -15px -15px 30px rgba(255, 255, 255, 0.6);
         }
 
         #chat-window {
@@ -42,56 +122,6 @@
             margin-bottom: 20px;
             border: 1px solid #ddd;
             box-shadow: inset 5px 5px 10px rgba(0, 0, 0, 0.1), inset -5px -5px 10px rgba(255, 255, 255, 0.5);
-        }
-
-        .user-message {
-            text-align: right;
-            background: linear-gradient(145deg, #6a0dad, #8a2be2);
-            color: white;
-            padding: 10px;
-            border-radius: 10px 10px 0 10px;
-            margin: 5px 0;
-            display: inline-block;
-            align-self: flex-end;
-            max-width: 70%;
-            box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.1);
-            animation: fadeIn 0.5s ease;
-        }
-
-        .bot-message {
-            text-align: left;
-            background: linear-gradient(145deg, #d3d3d3, #e0e0e0);
-            color: black;
-            padding: 10px;
-            border-radius: 10px 10px 10px 0;
-            margin: 5px 0;
-            display: inline-block;
-            align-self: flex-start;
-            max-width: 70%;
-            box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.1);
-            animation: fadeIn 0.5s ease;
-        }
-
-        .typing-indicator {
-            font-style: italic;
-            color: gray;
-            font-size: 14px;
-            margin: 5px 0;
-        }
-
-        .user-typing {
-            text-align: right;
-            align-self: flex-end;
-        }
-
-        .bot-typing {
-            text-align: left;
-            align-self: flex-start;
-        }
-
-        #messages {
-            display: flex;
-            flex-direction: column;
         }
 
         form {
@@ -108,56 +138,39 @@
             margin-right: 10px;
             font-size: 16px;
             box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.1), inset -3px -3px 6px rgba(255, 255, 255, 0.5);
-            transition: box-shadow 0.3s ease;
-        }
-
-        input:focus {
-            box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.2), inset -3px -3px 6px rgba(255, 255, 255, 0.6);
-            outline: none;
         }
 
         button {
             padding: 12px 16px;
-            background: linear-gradient(145deg, #007bff, #0056b3);
+            background: linear-gradient(145deg, #cccccc, #999999); /* Neutral tones */
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.1);
-            transition: background 0.3s ease, transform 0.2s ease;
         }
 
-        button:hover {
-            background: linear-gradient(145deg, #0056b3, #003f7f);
-            transform: scale(1.05);
-        }
-
-        #mic-btn {
+        #toggle-chat-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
             background: transparent;
             border: none;
             cursor: pointer;
-        }
-
-        #mic-btn i {
             font-size: 24px;
-            color: red;
+            color: white; /* Neutral color */
         }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
     </style>
 </head>
 <body>
+    <button id="toggle-chat-btn" onclick="toggleChat()">
+        <i class="fas fa-comments"></i>
+    </button>
+    <div class="mic-container">
+        <button id="mic-btn" onclick="toggleVoiceInput()">
+            <i class="fas fa-microphone"></i>
+        </button>
+    </div>
     <div class="chat-container">
         <h1>Chatbot</h1>
         <div id="chat-window">
@@ -167,9 +180,6 @@
             <input type="text" id="prompt" placeholder="Type your message here..." />
             <button type="submit">
                 <i class="fas fa-paper-plane"></i>
-            </button>
-            <button type="button" id="mic-btn" onclick="toggleVoiceInput()">
-                <i class="fas fa-microphone-slash"></i>
             </button>
         </form>
     </div>
@@ -271,6 +281,9 @@
         }
 
         function toggleVoiceInput() {
+            const micBtn = document.getElementById('mic-btn');
+            micBtn.classList.toggle('active');
+
             if (!('webkitSpeechRecognition' in window)) {
                 alert('Speech recognition is not supported in this browser.');
                 return;
@@ -279,7 +292,7 @@
             if (isListening) {
                 recognition.stop();
                 isListening = false;
-                document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
             } else {
                 recognition = new webkitSpeechRecognition();
                 recognition.lang = 'en-US';
@@ -288,7 +301,7 @@
 
                 recognition.onstart = function() {
                     isListening = true;
-                    document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone"></i>';
+                    micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
                 };
 
                 recognition.onresult = function(event) {
@@ -310,7 +323,7 @@
                             speakResponse(farewellMessage);
                             recognition.stop();
                             isListening = false;
-                            document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                            micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
                         } else {
                             sendMessage();
                         }
@@ -326,12 +339,20 @@
                     if (isListening && !isBotSpeaking) {
                         recognition.start(); // Restart listening only if bot is not speaking
                     } else {
-                        document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                        micBtn.classList.remove('active');
+                        micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
                     }
                 };
 
                 recognition.start();
             }
+        }
+
+        function toggleChat() {
+            const chatContainer = document.querySelector('.chat-container');
+            const micContainer = document.querySelector('.mic-container');
+            chatContainer.style.display = chatContainer.style.display === 'flex' ? 'none' : 'flex';
+            micContainer.style.display = micContainer.style.display === 'none' ? 'flex' : 'none';
         }
     </script>
 </body>
