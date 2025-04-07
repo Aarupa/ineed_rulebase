@@ -1,18 +1,37 @@
-Django==5.1.7
-SpeechRecognition==3.14.1
-PyAudio==0.2.14
-pyttsx3==2.98
-comtypes==1.1.14
-pywin32==306
-pypiwin32==223
+# Core Django Framework
+django==5.1.7
+djangorestframework
+
+# REST APIs, Middleware
+django-cors-headers
+
+# Speech Recognition & TTS
+SpeechRecognition==3.10.0
+pyttsx3==2.90
+gtts
+
+# Text & Language Processing
 spacy==3.8.4
 nltk==3.9.1
 textblob==0.19.0
 vaderSentiment==3.3.2
-fuzzywuzzy==0.18.0
-ChatterBot==1.2.4
-chatterbot-corpus==1.2.2
-SQLAlchemy==1.4.52
+
+# Sentiment & Spell Check
 python-dateutil==2.9.0.post0
-mathparse==0.1.2
-gunicorn==23.0.0
+
+# For MongoDB if needed
+pymongo
+
+# Google AI (Optional, based on presence in original requirements)
+google-generativeai
+
+# Utilities
+comtypes==1.1.14; platform_system=="Windows"
+pywin32==306; platform_system=="Windows"
+
+# Optional or Development use only
+# gunicorn==23.0.0  # Recommended only in production for Unix-based servers
+
+# Model downloads (required only during development or setup)
+# python -m nltk.downloader wordnet
+# python -m spacy download en_core_web_sm
