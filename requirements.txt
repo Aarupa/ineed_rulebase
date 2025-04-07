@@ -30,8 +30,7 @@ comtypes==1.1.14; platform_system=="Windows"
 pywin32==306; platform_system=="Windows"
 
 # Optional or Development use only
-# gunicorn==23.0.0  # Recommended only in production for Unix-based servers
-
+gunicorn==23.0.0  
 # Model downloads (required only during development or setup)
-# python -m nltk.downloader wordnet
-# python -m spacy download en_core_web_sm
+python -m nltk.downloader wordnet
+python -m spacy download en_core_web_sm
