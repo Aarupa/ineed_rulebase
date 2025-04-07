@@ -180,7 +180,7 @@
         let isBotSpeaking = false; // Flag to track if the bot is speaking
         //This extra code is added as first output voice was not coming of neerja
         let selectedVoice = null; // Store the preferred voice globally
-
+        let lastSpeechTime = 0; // Track when bot last spoke
 
         function sendMessage() {
             const prompt = document.getElementById('prompt').value;
