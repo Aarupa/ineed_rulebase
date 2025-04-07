@@ -69,8 +69,7 @@
             "question": "What services does Indeed Inspiring Infotech provide?",
             "keywords": [
                 "services",
-                "offerings",
-                "what services"
+                "offerings"
             ],
             "responses": [
                 "The company offers IT training, corporate training, fresher induction programs, and skill development programs.",
@@ -677,5 +676,5 @@
                 "Greetings! How may I help you?"
             ]
         }
-    ]
+]
 }
