@@ -17,9 +17,7 @@ from django.conf import settings # type: ignore
 from django.template.loader import get_template # type: ignore
 import logging
 from django.http import HttpRequest # type: ignore
-import threading  # Add threading for concurrent operations
-import time  # Add time for sleep functionality
-import wave  # Required for audio playback
+import time
 
 # ChatterBot imports
 from chatterbot import ChatBot # type: ignore
@@ -35,15 +33,14 @@ script_dir = os.path.dirname(__file__)
 json_path = os.path.join(script_dir, 'content.json')
 dialogue_history_path = os.path.join(os.path.dirname(__file__), 'history.json')
 
-
 # Load FAQ data
 with open(json_path, 'r') as json_data:
     faq_data = json.load(json_data)
 
+is_speaking = False
+current_speech = None
 
-# Initialize ChatterBot chatbot
-chatbot = ChatBot('IndeedBot')
-
+chatbot = ChatBot("MyBot")
 # Create a trainer and train the chatbot
 trainer = ChatterBotCorpusTrainer(chatbot)
 
@@ -57,9 +54,11 @@ nlp = spacy.load("en_core_web_sm")
 
 nltk.download('wordnet')
 sentiment_analyzer = SentimentIntensityAnalyzer()
+engine = pyttsx3.init()
 
-conversation_history = []  # Store conversation history temp
+conversation_history = []  # Store conversation history
 history = {}
+
 if os.path.exists(dialogue_history_path):
     with open(dialogue_history_path, 'r', encoding='utf-8') as f:
         try:
@@ -68,6 +67,13 @@ if os.path.exists(dialogue_history_path):
             history = {}
 else:
     history = {}
+'''
+def save_conversation_to_file(user_message, response):
+    """Append a new user-message and response pair to the JSON file."""
+    history[user_message] = response
+    with open(dialogue_history_path, 'w', encoding='utf-8') as f:
+        json.dump(history, f, indent=4, ensure_ascii=False)
+'''    
 
 def save_conversation_to_file(user_message, response):
     """Save the conversation to a JSON file as key-value pairs."""
@@ -101,12 +107,12 @@ def get_best_match(query, choices, threshold=80, min_length=2):
 def classify_query(msg):
     """Classify the query as company-related (FAQ) or general conversation."""
     msg_lower = msg.lower() 
-
     for i in  faq_data['faqs']:
         if msg_lower == i['question'].lower():
             response = random.choice(i['responses'])
             return "company", response
-    else:     
+    else:
+        # ----------------- FAQ Matching -----------------
         keywords = [keyword for faq in faq_data['faqs'] for keyword in faq['keywords']]
         best_match = get_best_match(msg_lower, keywords) 
 
@@ -202,63 +208,39 @@ def get_response(request):
                 return JsonResponse({'text': contextual_response})
             
             category, response = classify_query(user_message)
-            if ((category == "company") or (category == "general_convo")) and response:
-                # Update both the list and the JSON file
-                conversation_history.append((user_message, response))
+            if ((category == "company") or (category == "general_convo"))  and response:
+                conversation_history.append((user_message, response)) # Store conversation history
                 save_conversation_to_file(user_message, response)
                 return JsonResponse({'text': response})
             
             response = generate_nlp_response(user_message)
-            # Update both the list and the JSON file
-            #conversation_history.append((user_message, response))
-            #save_conversation_to_file(user_message, response)
+            #conversation_history.append((user_message, response)) # Store conversation history
             return JsonResponse({'text': response})
     return JsonResponse({'text': 'Invalid request'}, status=400)
 
 def speak(text):
-    """Convert chatbot's text response to speech and play it aloud using pyaudio."""
-    import gtts
-    from tempfile import NamedTemporaryFile
-
-    global stop_speaking_event  # Access the stop event
-
-    tts = gtts.gTTS(text)
-    with NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
-        temp_audio_path = temp_audio.name
-        tts.save(temp_audio_path)
-
-    chunk = 1024
-    wf = wave.open(temp_audio_path, 'rb')
-    pa = pyaudio.PyAudio()
-
-    stream = pa.open(format=pa.get_format_from_width(wf.getsampwidth()),
-                     channels=wf.getnchannels(),
-                     rate=wf.getframerate(),
-                     output=True)
-
-    data = wf.readframes(chunk)
-
-    while data:
-        if stop_speaking_event.is_set():  # Stop if interrupted
-            break
-        stream.write(data)
-        data = wf.readframes(chunk)
-
-    stream.stop_stream()
-    stream.close()
-    pa.terminate()
-    wf.close()
-
-stop_speaking_event = threading.Event()  # Event to stop speaking if interrupted
-
-def speak_async(text):
-    """Speak the chatbot's response in a separate thread using pyaudio."""
-    global stop_speaking_event
-    stop_speaking_event.clear()  # Ensure speaking is allowed
-    thread = threading.Thread(target=speak, args=(text,))
-    thread.start()
-    thread.join()  # Wait for speech to complete before setting stop
-    stop_speaking_event.set()  # Mark speaking as finished
+    """Convert chatbot's text response to speech with barge-in capability."""
+    global is_speaking, current_speech
+    
+    def on_start(name):
+        global is_speaking
+        is_speaking = True
+        
+    def on_end(name, completed):
+        global is_speaking, current_speech
+        is_speaking = False
+        current_speech = None
+        time.sleep(1)
+    
+    # Stop any ongoing speech
+    if is_speaking and current_speech:
+        engine.stop()
+    
+    current_speech = text
+    engine.connect('started-utterance', on_start)
+    engine.connect('finished-utterance', on_end)
+    engine.say(text)
+    engine.runAndWait()
 
 def preprocess_recognized_text(text):
     """Correct common misinterpretations in recognized speech."""
