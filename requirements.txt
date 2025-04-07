@@ -13,7 +13,6 @@ gtts
 fuzzywuzzy==0.18.0
 chatterbot ==1.2.4
 chatterbot-corpus==1.2.2
-spacy==3.7.2
 
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
 
