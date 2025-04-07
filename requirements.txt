@@ -14,7 +14,6 @@ fuzzywuzzy==0.18.0
 chatterbot ==1.2.4
 chatterbot-corpus==1.2.2
 
-https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
 
 # Text & Language Processing
 spacy==3.8.0
@@ -37,4 +36,8 @@ pywin32==306; platform_system=="Windows"
 
 # Optional or Development use only
 gunicorn==23.0.0  
+
+
+spacy==3.8.0
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
 
