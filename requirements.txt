@@ -12,6 +12,8 @@ gtts
 
 fuzzywuzzy==0.18.0
 chatterbot ==1.2.4
+chatterbot-corpus==1.2.2
+
 # Text & Language Processing
 spacy==3.8.4
 nltk==3.9.1
