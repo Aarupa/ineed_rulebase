@@ -339,6 +339,24 @@
                 recognition.start();
             }
         }
+
+        window.onload = function() {
+        fetch('/clear-history/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}' // Ensure CSRF token is included
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.message); // Log success or error message
+        })
+        .catch(error => {
+            console.error('Error clearing history:', error);
+        });
+    };
     </script>
 </body>
 </html>

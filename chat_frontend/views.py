@@ -1,6 +1,5 @@
 import speech_recognition as sr  # type: ignore 
-import pyaudio  # Replace pyttsx3 with pyaudio
-import wave  # Required for audio playback
+import pyttsx3  # type: ignore 
 import json  
 import random  
 import spacy  # type: ignore
@@ -32,7 +31,6 @@ script_dir = os.path.dirname(__file__)
 # Define the path to content.json
 json_path = os.path.join(script_dir, 'content.json')
 dialogue_history_path = os.path.join(os.path.dirname(__file__), 'history.json')
-
 # Load FAQ data
 with open(json_path, 'r') as json_data:
     faq_data = json.load(json_data)
@@ -40,17 +38,33 @@ with open(json_path, 'r') as json_data:
 is_speaking = False
 current_speech = None
 
-chatbot = ChatBot("MyBot")
-# Create a trainer and train the chatbot
-trainer = ChatterBotCorpusTrainer(chatbot)
+#chatbot = ChatBot("MyBot")
+#Create a trainer and train the chatbot
+#trainer = ChatterBotCorpusTrainer(chatbot)
 
-# Train chatbot with explicit corpus file paths
-trainer.train(
-    os.path.join(script_dir, "greetings.yml"),
-    os.path.join(script_dir, "conversations.yml")
+#Train chatbot with explicit corpus file paths
+# trainer.train(
+#     os.path.join(script_dir, "greetings.yml"),
+#     os.path.join(script_dir, "conversations.yml")
+# )
+
+
+from chatterbot import ChatBot
+import os
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(script_dir, 'db.sqlite3')
+
+chatbot = ChatBot(
+    "MyBot",
+    storage_adapter="chatterbot.storage.SQLStorageAdapter",
+    database_uri=f"sqlite:///{model_path}"
 )
 
+
+
 nlp = spacy.load("en_core_web_sm")
+
 
 nltk.download('wordnet')
 sentiment_analyzer = SentimentIntensityAnalyzer()
@@ -197,7 +211,6 @@ def get_response(request):
             # Clear history if user is ending the conversation
             if user_message.lower() in ["bye", "exit", "goodbye"]:
                 conversation_history.clear()
-                #save_conversation_to_file(user_message, "Ok bye! Have a good day!")
                 return JsonResponse({'text': "Ok bye! Have a good day!"})
 
             contextual_response = get_contextual_response(user_message)
@@ -212,6 +225,7 @@ def get_response(request):
                 conversation_history.append((user_message, response)) # Store conversation history
                 save_conversation_to_file(user_message, response)
                 return JsonResponse({'text': response})
+            
             
             response = generate_nlp_response(user_message)
             #conversation_history.append((user_message, response)) # Store conversation history
@@ -256,67 +270,58 @@ def preprocess_recognized_text(text):
     return " ".join(corrected_words)
 
 def listen():
-    """Keep the microphone continuously on and handle interruptions dynamically."""
-    recognizer = sr.Recognizer()
-    mic_active = False
-    print("Press Enter to toggle the microphone on/off. Say 'bye' or 'exit' to stop completely.")
+    """Toggle microphone to listen continuously until user says 'bye' or 'exit'."""
+    recognizer = sr.Recognizer() 
+    mic_active = False 
 
+    print("Press Enter to toggle the microphone on/off. Say 'bye' or 'exit' to stop completely.")
+    
     while True:
         command = input("Press Enter to toggle mic or type 'exit' to quit: ").strip().lower()
-
-        if command in ["exit", "bye", "bye bye"]:
-            conversation_history.clear()  # Clear history
+        
+        if command == "exit" or command == "bye" or command == "bye bye":
+            conversation_history.clear() # Clear history
             print("Exiting the chat. Goodbye!")
-            break
-
-        mic_active = not mic_active
-
+        if command == "exit":
+            print("Exiting the chat. Goodbye!")
+            break 
+        
+        mic_active = not mic_active 
+        
         if mic_active:
             print("Microphone is ON. Listening...")
             with sr.Microphone() as source:
                 recognizer.adjust_for_ambient_noise(source)
-
+                
                 while mic_active:
                     try:
                         print("Speak now...")
-                        audio = recognizer.listen(source, phrase_time_limit=15)  # Listen for up to 15 seconds
-                        user_message = recognizer.recognize_google(audio)
+                        audio = recognizer.listen(source, phrase_time_limit=15) 
+                        user_message = recognizer.recognize_google(audio) 
                         user_message = preprocess_recognized_text(user_message)
                         print(f"You said: {user_message}")
-
                         if "bye" in user_message.lower() or "exit" in user_message.lower() or "bye bye" in user_message.lower():
-                            conversation_history.clear()  # Clear history
+                            conversation_history.clear() # Clear history
                             print("Exiting the chat. Goodbye!")
-                            mic_active = False
+                            mic_active = False  
                             break
-
-                        # Stop any ongoing speech if the user interrupts
-                        if not stop_speaking_event.is_set():
-                            stop_speaking_event.set()
-                            time.sleep(0.2)
-
-                        # Process the user's query dynamically
                         request = HttpRequest()
                         request.method = 'POST'
                         request.body = json.dumps({'prompt': user_message}).encode('utf-8')
-
+                    
                         response = get_response(request)
-
+                        
                         # Extract the text from the JsonResponse
                         response_text = json.loads(response.content.decode('utf-8'))['text']
                         print(f"Chatbot: {response_text}")
-
-                        # Speak the response in a separate thread
-                        threading.Thread(target=speak_async, args=(response_text,)).start()
-
+                        speak(response_text)  # Speak the response aloud
+                        
                     except sr.UnknownValueError:
                         print("Sorry, I did not understand that. Please try again.")
                     except sr.RequestError:
                         print("Sorry, there seems to be an issue with the speech recognition service.")
                     except sr.WaitTimeoutError:
                         print("Listening timed out. Please try again.")
-                    except KeyboardInterrupt:
-                        print("Listening interrupted. You can speak again.")
         else:
             print("Microphone is OFF. Press Enter to toggle it back on.")
 
@@ -329,3 +334,12 @@ def chat(request):
     except Exception as e:
         logging.error(f"Error loading template: {e}")
         return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def clear_history(request):
+    """Clear the conversation history."""
+    global conversation_history
+    if request.method == 'POST':
+        conversation_history.clear()
+        return JsonResponse({'status': 'success', 'message': 'Conversation history cleared.'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
