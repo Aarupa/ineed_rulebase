@@ -283,68 +283,31 @@ def get_response(request):
         data = json.loads(request.body)
         user_message = data.get('prompt', '')
         if user_message:
+            # Log the received message for debugging
+            print(f"Received message: {user_message}")
+
             # Clear history if user is ending the conversation
             if user_message.lower() in ["bye", "exit", "goodbye"]:
                 conversation_history.clear()
                 return JsonResponse({'text': "Ok bye! Have a good day!"})
 
+            # Process the message and generate a response
             contextual_response = get_contextual_response(user_message)
             if contextual_response:
-                # Update both the list and the JSON file
                 conversation_history.append((user_message, contextual_response))
                 save_conversation_to_file(user_message, contextual_response)
                 return JsonResponse({'text': contextual_response})
-            
+
             category, response = classify_query(user_message)
-            if ((category == "company") or (category == "general_convo"))  and response:
-                conversation_history.append((user_message, response)) # Store conversation history
+            if ((category == "company") or (category == "general_convo")) and response:
+                conversation_history.append((user_message, response))
                 save_conversation_to_file(user_message, response)
                 return JsonResponse({'text': response})
-            
-            # Handle event-related queries
-            if "upcoming events" in user_message.lower():
-                upcoming_events = handle_event_query("upcoming")
-                if upcoming_events:
-                    response = "Our upcoming events are:\n" + "\n".join(
-                        [f"'{event['topic']}' on {event['date']} by {event['name']}" for event in upcoming_events]
-                    )
-                else:
-                    response = "There are no upcoming events."
-                return JsonResponse({'text': response})
 
-            elif "current events" in user_message.lower():
-                current_events = handle_event_query("current")
-                if current_events:
-                    response = "Here are the current events:\n" + "\n".join(
-                        [f"{event['name']} on {event['date']} at {event['time']} - {event['topic']}" for event in current_events]
-                    )
-                else:
-                    response = "There are no ongoing events right now."
-                return JsonResponse({'text': response})
-
-            elif "past events" in user_message.lower():
-                past_events = handle_event_query("past")
-                if past_events:
-                    response = "Here are the past events:\n" + "\n".join(
-                        [f"{event['name']} on {event['date']} at {event['time']} - {event['topic']}" for event in past_events]
-                    )
-                else:
-                    response = "There are no past events."
-                return JsonResponse({'text': response})
-
-            # Handle queries by topic or course
-            event = find_event_by_topic_or_course(user_message)
-            if event:
-                if event in get_event_status()["upcoming"]:
-                    response = f"Yes, '{event['topic']}' is an upcoming event. You can join it through our portal or YouTube channel."
-                elif event in get_event_status()["current"]:
-                    response = f"Yes, '{event['topic']}' is currently ongoing. You can join it through our portal or YouTube channel."
-                else:
-                    response = f"'{event['topic']}' was a past event. Stay tuned for similar events in the future!"
-                return JsonResponse({'text': response})
-
+            # Generate a fallback response if no specific match is found
             response = generate_nlp_response(user_message)
-            #conversation_history.append((user_message, response)) # Store conversation history
+            conversation_history.append((user_message, response))
+            save_conversation_to_file(user_message, response)
             return JsonResponse({'text': response})
     return JsonResponse({'text': 'Invalid request'}, status=400)
 

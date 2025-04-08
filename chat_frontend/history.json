@@ -64,7 +64,7 @@
     "What?": "What languages do you like to use?",
     "Marathi.": "Did you mean 'Greeting message'?\n Hello! How can I assist you today?",
     "No.": "Yes, they offer beginner-friendly courses with no prior experience required.",
-    "Hello, how can I assist you today?": "Hello! How can I assist you today?",
+    "Hello, how can I assist you today?": "Previously, I mentioned that Hi there! What can I do for you?",
     "What is in?": "Yes, they offer on-site training programs at the company's location.",
     "Hospital.": "Very well, thanks.",
     "Yes.": "What is it that you want to know?",
@@ -85,5 +85,7 @@
     "Where I can see the world at home?": "Thank you kindly.",
     "It is providing the energy for the mainstream.": "We provide training in leadership, communication, and industry-specific non-technical skills.",
     "OK. Thank you.": "Hello",
-    "Key features.": "I am doing well, how about you?"
+    "Key features.": "I am doing well, how about you?",
+    "Real data for project merchant, customer and.": "Yes, they have a dedicated customer support team to assist with queries.",
+    "Use real data for project merchant, customer and total consumer on home page.": "Our trainers can visit your office and conduct sessions tailored to your team's requirements."
 }
