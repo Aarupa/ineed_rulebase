@@ -17,6 +17,11 @@ from django.template.loader import get_template # type: ignore
 import logging
 from django.http import HttpRequest # type: ignore
 import time
+import whisper  # Import Whisper
+from pydub import AudioSegment
+from pydub.playback import play
+import tempfile
+from gtts import gTTS
 
 # ChatterBot imports
 from chatterbot import ChatBot # type: ignore
@@ -233,28 +238,25 @@ def get_response(request):
     return JsonResponse({'text': 'Invalid request'}, status=400)
 
 def speak(text):
-    """Convert chatbot's text response to speech with barge-in capability."""
-    global is_speaking, current_speech
-    
-    def on_start(name):
-        global is_speaking
-        is_speaking = True
+    """Convert chatbot's text response to speech using gTTS."""
+    try:
+        # Generate speech using gTTS
+        tts = gTTS(text=text, lang='en')
         
-    def on_end(name, completed):
-        global is_speaking, current_speech
-        is_speaking = False
-        current_speech = None
-        time.sleep(1)
-    
-    # Stop any ongoing speech
-    if is_speaking and current_speech:
-        engine.stop()
-    
-    current_speech = text
-    engine.connect('started-utterance', on_start)
-    engine.connect('finished-utterance', on_end)
-    engine.say(text)
-    engine.runAndWait()
+        # Save the speech to a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio_file:
+            tts.save(temp_audio_file.name)
+            temp_audio_path = temp_audio_file.name
+
+        # Play the audio using pydub
+        audio = AudioSegment.from_file(temp_audio_path, format="mp3")
+        play(audio)
+
+        # Clean up the temporary file
+        os.remove(temp_audio_path)
+
+    except Exception as e:
+        print(f"An error occurred during text-to-speech conversion: {e}")
 
 def preprocess_recognized_text(text):
     """Correct common misinterpretations in recognized speech."""
@@ -269,59 +271,77 @@ def preprocess_recognized_text(text):
     corrected_words = [corrections.get(word.lower(), word) for word in words]
     return " ".join(corrected_words)
 
+# Load the Whisper model
+whisper_model = whisper.load_model("tiny")
+
 def listen():
     """Toggle microphone to listen continuously until user says 'bye' or 'exit'."""
-    recognizer = sr.Recognizer() 
-    mic_active = False 
+    import sounddevice as sd
+    import numpy as np
+    from scipy.io.wavfile import write
 
+    mic_active = False
     print("Press Enter to toggle the microphone on/off. Say 'bye' or 'exit' to stop completely.")
-    
+
     while True:
         command = input("Press Enter to toggle mic or type 'exit' to quit: ").strip().lower()
-        
+
         if command == "exit" or command == "bye" or command == "bye bye":
-            conversation_history.clear() # Clear history
+            conversation_history.clear()  # Clear history
             print("Exiting the chat. Goodbye!")
-        if command == "exit":
-            print("Exiting the chat. Goodbye!")
-            break 
-        
-        mic_active = not mic_active 
-        
+            break
+
+        mic_active = not mic_active
+
         if mic_active:
             print("Microphone is ON. Listening...")
-            with sr.Microphone() as source:
-                recognizer.adjust_for_ambient_noise(source)
-                
-                while mic_active:
-                    try:
-                        print("Speak now...")
-                        audio = recognizer.listen(source, phrase_time_limit=15) 
-                        user_message = recognizer.recognize_google(audio) 
-                        user_message = preprocess_recognized_text(user_message)
-                        print(f"You said: {user_message}")
-                        if "bye" in user_message.lower() or "exit" in user_message.lower() or "bye bye" in user_message.lower():
-                            conversation_history.clear() # Clear history
-                            print("Exiting the chat. Goodbye!")
-                            mic_active = False  
-                            break
-                        request = HttpRequest()
-                        request.method = 'POST'
-                        request.body = json.dumps({'prompt': user_message}).encode('utf-8')
-                    
-                        response = get_response(request)
-                        
-                        # Extract the text from the JsonResponse
-                        response_text = json.loads(response.content.decode('utf-8'))['text']
-                        print(f"Chatbot: {response_text}")
-                        speak(response_text)  # Speak the response aloud
-                        
-                    except sr.UnknownValueError:
-                        print("Sorry, I did not understand that. Please try again.")
-                    except sr.RequestError:
-                        print("Sorry, there seems to be an issue with the speech recognition service.")
-                    except sr.WaitTimeoutError:
-                        print("Listening timed out. Please try again.")
+            try:
+                # Record audio
+                duration = 15  # Record for 15 seconds
+                print("Recording...")
+                audio = sd.rec(int(duration * 16000), samplerate=16000, channels=1, dtype='int16')
+                sd.wait()  # Wait until recording is finished
+                print("Recording finished.")
+
+                # Save audio to a temporary WAV file
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio_file:
+                    write(temp_audio_file.name, 16000, audio)
+                    temp_audio_path = temp_audio_file.name
+
+                # Convert WAV to MP3 using pydub and ffmpeg
+                audio_segment = AudioSegment.from_wav(temp_audio_path)
+                mp3_path = temp_audio_path.replace(".wav", ".mp3")
+                audio_segment.export(mp3_path, format="mp3")
+                print(f"Audio converted to MP3: {mp3_path}")
+
+                # Transcribe audio using Whisper
+                result = whisper_model.transcribe(temp_audio_path)
+                user_message = result["text"]
+                print(f"You said: {user_message}")
+
+                # Clean up temporary files
+                os.remove(temp_audio_path)
+                os.remove(mp3_path)
+
+                if "bye" in user_message.lower() or "exit" in user_message.lower() or "bye bye" in user_message.lower():
+                    conversation_history.clear()  # Clear history
+                    print("Exiting the chat. Goodbye!")
+                    mic_active = False
+                    break
+
+                # Process the user message
+                request = HttpRequest()
+                request.method = 'POST'
+                request.body = json.dumps({'prompt': user_message}).encode('utf-8')
+
+                response = get_response(request)
+
+                # Extract the text from the JsonResponse
+                response_text = json.loads(response.content.decode('utf-8'))['text']
+                print(f"Chatbot: {response_text}")
+
+            except Exception as e:
+                print(f"An error occurred: {e}")
         else:
             print("Microphone is OFF. Press Enter to toggle it back on.")
 
