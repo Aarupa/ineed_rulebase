@@ -4,7 +4,7 @@ djangorestframework
 django-cors-headers
 
 # Chatbot Core
-chatterbot==1.0.5
+chatterbot==1.2.4
 chatterbot-corpus
 
 # Speech Recognition & Text-to-Speech
