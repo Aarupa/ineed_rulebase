@@ -178,9 +178,7 @@
         let recognition;
         let isListening = false;
         let isBotSpeaking = false; // Flag to track if the bot is speaking
-        //This extra code is added as first output voice was not coming of neerja
         let selectedVoice = null; // Store the preferred voice globally
-        let lastSpeechTime = 0; // Track when bot last spoke
 
         function sendMessage() {
             const prompt = document.getElementById('prompt').value;
@@ -250,9 +248,17 @@
             window.speechSynthesis.onvoiceschanged = loadVoices;
         }
 
-        
-        // Modify the speakResponse function
         function speakResponse(text) {
+            // Stop any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            // Stop recognition if it's active
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                updateMicButton();
+            }
+
             const speech = new SpeechSynthesisUtterance(text);
             speech.lang = 'en-IN';
             
@@ -261,31 +267,35 @@
                 speech.voice = selectedVoice;
             }
 
-            // Stop any ongoing recognition when bot starts speaking
-            if (isListening) {
-                recognition.stop();
-            }
-
             speech.onstart = () => {
                 isBotSpeaking = true;
-                document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                updateMicButton();
             };
 
             speech.onend = () => {
                 isBotSpeaking = false;
-                // Restart recognition if it was active
-                if (isListening) {
-                    recognition.start();
-                    document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone"></i>';
-                }
+                updateMicButton();
             };
 
-            // Cancel any ongoing speech before starting new one
-            window.speechSynthesis.cancel();
+            speech.onerror = () => {
+                isBotSpeaking = false;
+                updateMicButton();
+            };
+
             window.speechSynthesis.speak(speech);
         }
 
-        // Modify the toggleVoiceInput function
+        function updateMicButton() {
+            const micBtn = document.getElementById('mic-btn');
+            if (isBotSpeaking) {
+                micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+            } else {
+                micBtn.innerHTML = isListening 
+                    ? '<i class="fas fa-microphone"></i>' 
+                    : '<i class="fas fa-microphone-slash"></i>';
+            }
+        }
+
         function toggleVoiceInput() {
             if (!('webkitSpeechRecognition' in window)) {
                 alert('Speech recognition is not supported in this browser.');
@@ -295,8 +305,14 @@
             if (isListening) {
                 recognition.stop();
                 isListening = false;
-                document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                updateMicButton();
             } else {
+                // If bot is speaking, stop it first
+                if (isBotSpeaking) {
+                    window.speechSynthesis.cancel();
+                    isBotSpeaking = false;
+                }
+
                 recognition = new webkitSpeechRecognition();
                 recognition.lang = 'en-US';
                 recognition.interimResults = false;
@@ -304,18 +320,12 @@
 
                 recognition.onstart = function() {
                     isListening = true;
-                    document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone"></i>';
+                    updateMicButton();
                 };
 
                 recognition.onresult = function(event) {
                     const transcript = event.results[event.results.length - 1][0].transcript.trim();
                     if (transcript) {
-                        // If bot is speaking, stop it and process user input
-                        if (isBotSpeaking) {
-                            window.speechSynthesis.cancel();
-                            isBotSpeaking = false;
-                        }
-                        
                         document.getElementById('prompt').value = transcript;
                         sendMessage();
                     }
@@ -326,13 +336,16 @@
                     if (event.error !== 'no-speech') {
                         alert('Voice input failed. Please try again.');
                     }
+                    isListening = false;
+                    updateMicButton();
                 };
 
                 recognition.onend = function() {
                     if (isListening) {
+                        // Restart recognition if it was active
                         recognition.start();
                     } else {
-                        document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                        updateMicButton();
                     }
                 };
 
@@ -341,22 +354,22 @@
         }
 
         window.onload = function() {
-        fetch('/clear-history/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}' // Ensure CSRF token is included
-            },
-            body: JSON.stringify({})
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data.message); // Log success or error message
-        })
-        .catch(error => {
-            console.error('Error clearing history:', error);
-        });
-    };
+            fetch('/clear-history/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+            })
+            .catch(error => {
+                console.error('Error clearing history:', error);
+            });
+        };
     </script>
 </body>
 </html>
