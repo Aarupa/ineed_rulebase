@@ -33,8 +33,8 @@ scipy
 numpy
 
 # Platform-Specific (Only install on Windows)
-comtypes; platform_system=="Windows"
-pywin32; platform_system=="Windows"
+#comtypes; platform_system=="Windows"
+#pywin32; platform_system=="Windows"
 
 # Server Deployment (Optional)
 gunicorn
