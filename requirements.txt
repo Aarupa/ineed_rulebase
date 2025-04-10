@@ -1,45 +1,44 @@
 # Core Django Framework
 django
 djangorestframework
-
-# REST APIs, Middleware
 django-cors-headers
 
-# Speech Recognition & TTS
+# Chatbot Core
+chatterbot==1.0.5
+chatterbot-corpus
+
+# Speech Recognition & Text-to-Speech
 SpeechRecognition
 pyttsx3
 gtts
+sounddevice
+pydub
 
-fuzzywuzzy
-chatterbot 
-chatterbot-corpus
+# Whisper ASR (Audio to Text)
+openai-whisper
 
-
-
-# Text & Language Processing
+# NLP & Language Processing
 spacy
 nltk
 textblob
 vaderSentiment
 
-# Sentiment & Spell Check
-python-dateutil
+# Fuzzy Matching & Spell Check
+fuzzywuzzy
+python-Levenshtein
+textblob
 
-# For MongoDB if needed
-pymongo
+# Audio & Math Utils
+scipy
+numpy
 
-# Google AI (Optional, based on presence in original requirements)
-#google-generativeai
-
-# Utilities
+# Platform-Specific (Only install on Windows)
 comtypes; platform_system=="Windows"
 pywin32; platform_system=="Windows"
 
-# Optional or Development use only
+# Server Deployment (Optional)
 gunicorn
 pyyaml
-python-Levenshtein
 
-
+# SpaCy Model - English (install manually or separately)
 en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
-
