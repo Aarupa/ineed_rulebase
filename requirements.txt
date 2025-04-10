@@ -18,7 +18,7 @@ pydub
 openai-whisper
 
 # NLP & Language Processing
-spacy
+spacy==3.5.4
 nltk
 textblob
 vaderSentiment
