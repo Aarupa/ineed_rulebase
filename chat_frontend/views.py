@@ -1,5 +1,5 @@
-import speech_recognition as sr  # type: ignore 
-import pyttsx3  # type: ignore 
+#import speech_recognition as sr  # type: ignore 
+#import pyttsx3  # type: ignore 
 import json  
 import random  
 import spacy  # type: ignore
@@ -73,7 +73,7 @@ nlp = spacy.load("en_core_web_sm")
 
 nltk.download('wordnet')
 sentiment_analyzer = SentimentIntensityAnalyzer()
-engine = pyttsx3.init()
+
 
 conversation_history = []  # Store conversation history
 history = {}
