@@ -5,6 +5,7 @@ import json
 import random
 import tempfile
 import logging
+from datetime import datetime, timedelta
 
 # Third-party imports
 import speech_recognition as sr  # type: ignore
@@ -149,7 +150,7 @@ def generate_nlp_response(msg):
         return random.choice(["Glad to hear that! 😊 What’s on your mind?", "That's awesome! How can I assist you today?"])
     elif "thank you" in msg.lower() or "thanks" in msg.lower():
         return random.choice(["You're very welcome!", "Anytime! Glad I could help."])
-    elif msg.lower() in ["bye", "exit", "goodbye"]:
+    elif msg.lower() in ["bye", "exit"]:
         conversation_history.clear()
         return "Ok bye! Have a good day!"
     else:
@@ -161,8 +162,84 @@ def get_contextual_response(user_message):
     if "weather" in user_message.lower():
         return "I'm not equipped to provide weather updates, but you can check a weather app!"
     elif "time" in user_message.lower():
-        from datetime import datetime
         return f"The current time is {datetime.now().strftime('%H:%M:%S')}."
+    return None
+
+def handle_time_based_greeting(msg):
+    """Handle time-based greetings and provide an appropriate response."""
+    greetings = ["good morning", "good afternoon", "good evening", "good night"]
+    msg_lower = msg.lower()
+
+    # Check if the message contains a time-based greeting
+    for greeting in greetings:
+        if greeting in msg_lower:
+            current_hour = datetime.now().hour
+            if greeting == "good morning":
+                if current_hour < 12:
+                    return "Good morning! How can I assist you today?"
+                elif current_hour < 18:
+                    return "It's already afternoon, but good day to you!"
+                else:
+                    return "It's evening now, but good day to you!"
+            elif greeting == "good afternoon":
+                if current_hour < 12:
+                    return "It's still morning, but good day to you!"
+                elif current_hour < 18:
+                    return "Good afternoon! How can I assist you today?"
+                else:
+                    return "It's evening now, but good day to you!"
+            elif greeting == "good evening":
+                if current_hour < 12:
+                    return "It's still morning, but good day to you!"
+                elif current_hour < 18:
+                    return "It's still afternoon, but good day to you!"
+                else:
+                    return "Good evening! How can I assist you today?"
+            elif greeting == "good night":
+                return "Good night! Sleep well and take care!"
+
+    # Handle queries about the current time
+    if "current time" in msg_lower or "current time" in msg_lower:
+        return f"The current time is {datetime.now().strftime('%H:%M:%S')}."
+
+    # Fallback to classify query or ChatterBot response
+    category, response = classify_query(msg)
+    if response:
+        return response
+
+    # Fallback to ChatterBot response
+    response = chatbot.get_response(msg_lower)
+    return str(response) if response else "I'm sorry, I couldn't understand that."
+
+def handle_date_related_queries(msg):
+    """Handle date-related queries and provide an appropriate response."""
+    msg_lower = msg.lower()
+    today = datetime.now()
+    
+    # Define a mapping for generic conditions
+    date_mapping = {
+        "today": today,
+        "tomorrow": today + timedelta(days=1),
+        "day after tomorrow": today + timedelta(days=2),
+        "yesterday": today - timedelta(days=1),
+        "day before yesterday": today - timedelta(days=2),
+        "next week": today + timedelta(weeks=1),
+        "last week": today - timedelta(weeks=1),
+        "next month": (today.replace(day=28) + timedelta(days=4)).replace(day=1),  # First day of next month
+        "last month": (today.replace(day=1) - timedelta(days=1)).replace(day=1),  # First day of last month
+        "next year": today.replace(year=today.year + 1),
+        "last year": today.replace(year=today.year - 1)
+    }
+    
+    # Check for specific phrases in the message
+    for key, date in date_mapping.items():
+        if key in msg_lower:
+            if "date" in msg_lower:
+                return f"The {key}'s date is {date.strftime('%B %d, %Y')}."
+            elif "day" in msg_lower:
+                return f"The {key} is {date.strftime('%A')}."
+    
+    # Fallback for unrecognized queries
     return None
 
 # -------------------- HTTP Request Handlers --------------------
@@ -174,22 +251,35 @@ def get_response(request):
         data = json.loads(request.body)
         user_message = data.get('prompt', '')
         if user_message:
-            if user_message.lower() in ["bye", "exit", "goodbye", "bye bye"]:
-                conversation_history.clear()
-                return JsonResponse({'text': "Ok bye! Have a good day!"})
+            # Handle date-related queries first
+            date_related_response = handle_date_related_queries(user_message)
+            if date_related_response:
+                conversation_history.append((user_message, date_related_response))
+                save_conversation_to_file(user_message, date_related_response)
+                return JsonResponse({'text': date_related_response})
 
+            # Handle time-based greetings
+            time_based_response = handle_time_based_greeting(user_message)
+            if time_based_response:
+                conversation_history.append((user_message, time_based_response))
+                save_conversation_to_file(user_message, time_based_response)
+                return JsonResponse({'text': time_based_response})
+
+            # Handle contextual responses
             contextual_response = get_contextual_response(user_message)
             if contextual_response:
                 conversation_history.append((user_message, contextual_response))
                 save_conversation_to_file(user_message, contextual_response)
                 return JsonResponse({'text': contextual_response})
 
+            # Handle classified queries
             category, response = classify_query(user_message)
             if response:
                 conversation_history.append((user_message, response))
                 save_conversation_to_file(user_message, response)
                 return JsonResponse({'text': response})
 
+            # Fallback to NLP response
             response = generate_nlp_response(user_message)
             return JsonResponse({'text': response})
     return JsonResponse({'text': 'Invalid request'}, status=400)
