@@ -9,155 +9,141 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #f7f7f7;
+            background-color: black;
             margin: 0;
             padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .mic-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: all 0.5s ease-in-out;
+        }
+
+        .mic-container.active {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #mic-btn {
+            background: none; /* Remove background */
+            border: none;
+            cursor: pointer;
+            outline: none;
+            padding: 0; /* Remove padding */
+            width: 60px; /* Adjust width */
+            height: 60px; /* Adjust height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #mic-btn img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .mic-status {
+            margin-top: 10px;
+            font-size: 16px;
+            color: white;
+            text-align: center;
+            display: none;
+        }
+
+        .mic-container.active .mic-status {
+            display: block;
         }
 
         .chat-container {
+            display: none;
+            flex-direction: column;
             max-width: 800px;
             width: 100%;
-            margin: 50px auto;
+            margin: 0 auto;
             background: linear-gradient(145deg, #ffffff, #e6e6e6);
             padding: 30px;
             border-radius: 12px;
             box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2), -10px -10px 20px rgba(255, 255, 255, 0.5);
-            display: flex;
-            flex-direction: column;
             height: 80vh;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .chat-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 15px 15px 30px rgba(0, 0, 0, 0.3), -15px -15px 30px rgba(255, 255, 255, 0.6);
-        }
-
-        #chat-window {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            background: linear-gradient(145deg, #f9f9f9, #e6e6e6);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            box-shadow: inset 5px 5px 10px rgba(0, 0, 0, 0.1), inset -5px -5px 10px rgba(255, 255, 255, 0.5);
-        }
-
-        .user-message {
-            text-align: right;
-            background: linear-gradient(145deg, #6a0dad, #8a2be2);
-            color: white;
-            padding: 10px;
-            border-radius: 10px 10px 0 10px;
-            margin: 5px 0;
-            display: inline-block;
-            align-self: flex-end;
-            max-width: 70%;
-            box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.1);
-            animation: fadeIn 0.5s ease;
-        }
-
-        .bot-message {
-            text-align: left;
-            background: linear-gradient(145deg, #d3d3d3, #e0e0e0);
-            color: black;
-            padding: 10px;
-            border-radius: 10px 10px 10px 0;
-            margin: 5px 0;
-            display: inline-block;
-            align-self: flex-start;
-            max-width: 70%;
-            box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.1);
-            animation: fadeIn 0.5s ease;
-        }
-
-        .typing-indicator {
-            font-style: italic;
-            color: gray;
-            font-size: 14px;
-            margin: 5px 0;
-        }
-
-        .user-typing {
-            text-align: right;
-            align-self: flex-end;
-        }
-
-        .bot-typing {
-            text-align: left;
-            align-self: flex-start;
-        }
-
-        #messages {
-            display: flex;
-            flex-direction: column;
-        }
-
-        form {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-right: 10px;
-            font-size: 16px;
-            box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.1), inset -3px -3px 6px rgba(255, 255, 255, 0.5);
-            transition: box-shadow 0.3s ease;
-        }
-
-        input:focus {
-            box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.2), inset -3px -3px 6px rgba(255, 255, 255, 0.6);
-            outline: none;
-        }
-
-        button {
-            padding: 12px 16px;
-            background: linear-gradient(145deg, #007bff, #0056b3);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.1);
-            transition: background 0.3s ease, transform 0.2s ease;
-        }
-
-        button:hover {
-            background: linear-gradient(145deg, #0056b3, #003f7f);
-            transform: scale(1.05);
-        }
-
-        #mic-btn {
+        #toggle-chat-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
             background: transparent;
             border: none;
             cursor: pointer;
-        }
-
-        #mic-btn i {
             font-size: 24px;
-            color: red;
+            color: white;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        #menu-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            color: white;
         }
 
+        @media (max-width: 768px) {
+            .mic-container {
+                bottom: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            #mic-btn {
+                width: 50px;
+                height: 50px;
+            }
+
+            #toggle-chat-btn {
+                top: auto;
+                bottom: 20px;
+                right: 20px;
+            }
+
+            #menu-btn {
+                top: auto;
+                bottom: 20px;
+                left: 20px;
+            }
+        }
     </style>
 </head>
 <body>
+    <button id="menu-btn">
+        <i class="fas fa-bars"></i>
+    </button>
+    <button id="toggle-chat-btn" onclick="toggleChat()">
+        <i class="fas fa-keyboard"></i>
+    </button>
+    <div class="mic-container">
+        <button id="mic-btn" onclick="toggleVoiceInput()">
+            <img src="/static/assets/voicegif.gif" alt="Voice GIF">
+        </button>
+        <div class="mic-status"></div>
+    </div>
     <div class="chat-container">
         <h1>Chatbot</h1>
         <div id="chat-window">
@@ -168,9 +154,6 @@
             <button type="submit">
                 <i class="fas fa-paper-plane"></i>
             </button>
-            <button type="button" id="mic-btn" onclick="toggleVoiceInput()">
-                <i class="fas fa-microphone-slash"></i>
-            </button>
         </form>
     </div>
 
@@ -178,9 +161,7 @@
         let recognition;
         let isListening = false;
         let isBotSpeaking = false; // Flag to track if the bot is speaking
-        //This extra code is added as first output voice was not coming of neerja
         let selectedVoice = null; // Store the preferred voice globally
-        let lastSpeechTime = 0; // Track when bot last spoke
 
         function sendMessage() {
             const prompt = document.getElementById('prompt').value;
@@ -250,9 +231,17 @@
             window.speechSynthesis.onvoiceschanged = loadVoices;
         }
 
-        
-        // Modify the speakResponse function
         function speakResponse(text) {
+            // Stop any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            // Stop recognition if it's active
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                updateMicButton();
+            }
+
             const speech = new SpeechSynthesisUtterance(text);
             speech.lang = 'en-IN';
             
@@ -261,14 +250,9 @@
                 speech.voice = selectedVoice;
             }
 
-            // Stop any ongoing recognition when bot starts speaking
-            if (isListening) {
-                recognition.stop();
-            }
-
             speech.onstart = () => {
                 isBotSpeaking = true;
-                document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
             };
 
             speech.onend = () => {
@@ -276,7 +260,7 @@
                 // Restart recognition if it was active
                 if (isListening) {
                     recognition.start();
-                    document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone"></i>';
+                    document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice GIF">';
                 }
             };
 
@@ -285,8 +269,24 @@
             window.speechSynthesis.speak(speech);
         }
 
-        // Modify the toggleVoiceInput function
+        function updateMicButton() {
+            const micBtn = document.getElementById('mic-btn');
+            if (isBotSpeaking) {
+                micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+            } else {
+                micBtn.innerHTML = isListening 
+                    ? '<i class="fas fa-microphone"></i>' 
+                    : '<i class="fas fa-microphone-slash"></i>';
+            }
+        }
+
         function toggleVoiceInput() {
+            const micContainer = document.querySelector('.mic-container');
+            const micBtn = document.getElementById('mic-btn');
+            const micStatus = document.querySelector('.mic-status');
+
+            micContainer.classList.toggle('active');
+
             if (!('webkitSpeechRecognition' in window)) {
                 alert('Speech recognition is not supported in this browser.');
                 return;
@@ -295,8 +295,16 @@
             if (isListening) {
                 recognition.stop();
                 isListening = false;
-                document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                micBtn.innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice GIF">';
+                micStatus.textContent = 'Responding...';
+                setTimeout(() => micStatus.textContent = '', 2000);
             } else {
+                // If bot is speaking, stop it first
+                if (isBotSpeaking) {
+                    window.speechSynthesis.cancel();
+                    isBotSpeaking = false;
+                }
+
                 recognition = new webkitSpeechRecognition();
                 recognition.lang = 'en-US';
                 recognition.interimResults = false;
@@ -304,20 +312,36 @@
 
                 recognition.onstart = function() {
                     isListening = true;
-                    document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone"></i>';
+                    micBtn.innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
+                    micStatus.textContent = 'Listening...';
                 };
 
                 recognition.onresult = function(event) {
                     const transcript = event.results[event.results.length - 1][0].transcript.trim();
                     if (transcript) {
-                        // If bot is speaking, stop it and process user input
-                        if (isBotSpeaking) {
-                            window.speechSynthesis.cancel();
-                            isBotSpeaking = false;
-                        }
-                        
-                        document.getElementById('prompt').value = transcript;
-                        sendMessage();
+                        const messages = document.getElementById('messages');
+                        const userMessage = document.createElement('div');
+                        userMessage.className = 'user-message';
+                        userMessage.textContent = transcript; // Display recognized speech
+                        messages.appendChild(userMessage);
+
+                        // Send the recognized speech to the chatbot
+                        axios.post('/api/chat/', { prompt: transcript, job: "general" })
+                            .then(response => {
+                                const botMessage = document.createElement('div');
+                                botMessage.className = 'bot-message';
+                                botMessage.textContent = response.data.text;
+                                messages.appendChild(botMessage);
+
+                                speakResponse(response.data.text); // Speak the bot's response
+                            })
+                            .catch(error => {
+                                console.error(error);
+                                const botMessage = document.createElement('div');
+                                botMessage.className = 'bot-message';
+                                botMessage.textContent = "Something went wrong. Please try again.";
+                                messages.appendChild(botMessage);
+                            });
                     }
                 };
 
@@ -326,13 +350,18 @@
                     if (event.error !== 'no-speech') {
                         alert('Voice input failed. Please try again.');
                     }
+                    isListening = false;
+                    updateMicButton();
                 };
 
                 recognition.onend = function() {
                     if (isListening) {
+                        // Restart recognition if it was active
                         recognition.start();
                     } else {
-                        document.getElementById('mic-btn').innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                        micBtn.classList.remove('active');
+                        micBtn.innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice GIF">';
+                        micStatus.textContent = '';
                     }
                 };
 
@@ -340,23 +369,12 @@
             }
         }
 
-        window.onload = function() {
-        fetch('/clear-history/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}' // Ensure CSRF token is included
-            },
-            body: JSON.stringify({})
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data.message); // Log success or error message
-        })
-        .catch(error => {
-            console.error('Error clearing history:', error);
-        });
-    };
+        function toggleChat() {
+            const chatContainer = document.querySelector('.chat-container');
+            const micContainer = document.querySelector('.mic-container');
+            chatContainer.style.display = chatContainer.style.display === 'flex' ? 'none' : 'flex';
+            micContainer.style.display = micContainer.style.display === 'none' ? 'flex' : 'none';
+        }
     </script>
 </body>
 </html>

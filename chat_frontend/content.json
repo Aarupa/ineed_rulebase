@@ -14,6 +14,19 @@
             ]
         },
         {
+            "question": "What is Indeed Inspiring Infotech",
+            "keywords": [
+                "company information",
+                "about company",
+                "company overview"
+            ],
+            "responses": [
+                "Indeed Inspiring Infotech is a tech-driven company specializing in IT solutions and training.",
+                "We are a company dedicated to bridging the gap between industry and academia through technology.",
+                "Indeed Inspiring provides IT training and corporate solutions to help businesses and individuals grow."
+            ]
+        },
+        {
             "question": "Where is Indeed Inspiring Infotech located?",
             "keywords": [
                 "location",
