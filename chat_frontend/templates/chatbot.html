@@ -161,9 +161,7 @@
         let recognition;
         let isListening = false;
         let isBotSpeaking = false; // Flag to track if the bot is speaking
-        //This extra code is added as first output voice was not coming of neerja
         let selectedVoice = null; // Store the preferred voice globally
-        let lastSpeechTime = 0; // Track when bot last spoke
 
         function sendMessage() {
             const prompt = document.getElementById('prompt').value;
@@ -233,20 +231,23 @@
             window.speechSynthesis.onvoiceschanged = loadVoices;
         }
 
-        
-        // Modify the speakResponse function
         function speakResponse(text) {
+            // Stop any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            // Stop recognition if it's active
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                updateMicButton();
+            }
+
             const speech = new SpeechSynthesisUtterance(text);
             speech.lang = 'en-IN';
             
             // Set the preferred voice if available
             if (selectedVoice) {
                 speech.voice = selectedVoice;
-            }
-
-            // Stop any ongoing recognition when bot starts speaking
-            if (isListening) {
-                recognition.stop();
             }
 
             speech.onstart = () => {
@@ -268,7 +269,17 @@
             window.speechSynthesis.speak(speech);
         }
 
-        // Modify the toggleVoiceInput function
+        function updateMicButton() {
+            const micBtn = document.getElementById('mic-btn');
+            if (isBotSpeaking) {
+                micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+            } else {
+                micBtn.innerHTML = isListening 
+                    ? '<i class="fas fa-microphone"></i>' 
+                    : '<i class="fas fa-microphone-slash"></i>';
+            }
+        }
+
         function toggleVoiceInput() {
             const micContainer = document.querySelector('.mic-container');
             const micBtn = document.getElementById('mic-btn');
@@ -288,6 +299,12 @@
                 micStatus.textContent = 'Responding...';
                 setTimeout(() => micStatus.textContent = '', 2000);
             } else {
+                // If bot is speaking, stop it first
+                if (isBotSpeaking) {
+                    window.speechSynthesis.cancel();
+                    isBotSpeaking = false;
+                }
+
                 recognition = new webkitSpeechRecognition();
                 recognition.lang = 'en-US';
                 recognition.interimResults = false;
@@ -333,10 +350,13 @@
                     if (event.error !== 'no-speech') {
                         alert('Voice input failed. Please try again.');
                     }
+                    isListening = false;
+                    updateMicButton();
                 };
 
                 recognition.onend = function() {
                     if (isListening) {
+                        // Restart recognition if it was active
                         recognition.start();
                     } else {
                         micBtn.classList.remove('active');
