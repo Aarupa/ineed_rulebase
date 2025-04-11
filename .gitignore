@@ -6,3 +6,6 @@
 
 # History file
 history.json
+
+*.pyc
+__pycache__/
