@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,6 +30,13 @@
             align-items: center;
             flex-direction: column;
             transition: all 0.5s ease-in-out;
+            z-index: 1000;
+            width: 120px;
+            /* Increased base size */
+            height: 120px;
+            /* Ensure equal width and height */
+            border-radius: 50%;
+            /* Make it a perfect circle */
         }
 
         .mic-container.active {
@@ -36,31 +44,69 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            width: 300px;
+            /* Further increased size */
+            height: 300px;
+            /* Ensure equal width and height */
+            border-radius: 50%;
+            /* Keep it circular */
+        }
+
+        .mic-container.active #mic-btn {
+            width: 280px;
+            /* Slightly smaller than container */
+            height: 280px;
+            /* Ensure equal width and height */
+            border-radius: 50%;
+            /* Keep it circular */
+        }
+
+        .mic-container.active #mic-btn img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            /* Ensure circular image */
+            object-fit: cover;
+            /* Prevent distortion */
+        }
+
+        .mic-container.active .mic-status {
+            font-size: 24px;
+            /* Increased font size */
+            margin-top: 15px;
+            /* Adjusted spacing */
         }
 
         #mic-btn {
-            background: none; /* Remove background */
+            background: none;
             border: none;
             cursor: pointer;
             outline: none;
-            padding: 0; /* Remove padding */
-            width: 60px; /* Adjust width */
-            height: 60px; /* Adjust height */
+            padding: 0;
+            width: 100px;
+            /* Increased base size */
+            height: 100px;
+            /* Ensure equal width and height */
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: transform 0.3s ease-in-out;
+            transition: all 0.3s ease-in-out;
+            border-radius: 50%;
+            /* Make it a perfect circle */
         }
 
         #mic-btn img {
             width: 100%;
             height: 100%;
             border-radius: 50%;
+            /* Ensure the image is circular */
+            object-fit: cover;
+            /* Prevent distortion */
         }
 
         .mic-status {
             margin-top: 10px;
-            font-size: 16px;
+            font-size: 20px;
             color: white;
             text-align: center;
             display: none;
@@ -92,6 +138,7 @@
             cursor: pointer;
             font-size: 24px;
             color: white;
+            z-index: 1001;
         }
 
         #menu-btn {
@@ -103,18 +150,37 @@
             cursor: pointer;
             font-size: 24px;
             color: white;
+            z-index: 1001;
         }
 
         @media (max-width: 768px) {
             .mic-container {
                 bottom: 10px;
-                left: 50%;
-                transform: translateX(-50%);
+                width: 120px;
+                /* Increased size for mobile */
+                height: 120px;
+                /* Ensure equal width and height */
+            }
+
+            .mic-container.active {
+                width: 250px;
+                /* Increased size for mobile */
+                height: 250px;
+                /* Ensure equal width and height */
+            }
+
+            .mic-container.active #mic-btn {
+                width: 230px;
+                /* Slightly smaller than container */
+                height: 230px;
+                /* Ensure equal width and height */
             }
 
             #mic-btn {
-                width: 50px;
-                height: 50px;
+                width: 100px;
+                /* Increased base size for mobile */
+                height: 100px;
+                /* Ensure equal width and height */
             }
 
             #toggle-chat-btn {
@@ -131,6 +197,7 @@
         }
     </style>
 </head>
+
 <body>
     <button id="menu-btn">
         <i class="fas fa-bars"></i>
@@ -139,7 +206,7 @@
         <i class="fas fa-keyboard"></i>
     </button>
     <div class="mic-container">
-        <button id="mic-btn" onclick="toggleVoiceInput()">
+        <button id="mic-btn" onclick="handleMicClick()">
             <img src="/static/assets/voicegif.gif" alt="Voice GIF">
         </button>
         <div class="mic-status"></div>
@@ -160,8 +227,25 @@
     <script>
         let recognition;
         let isListening = false;
-        let isBotSpeaking = false; // Flag to track if the bot is speaking
-        let selectedVoice = null; // Store the preferred voice globally
+        let isBotSpeaking = false;
+        let isFirstClick = true;
+        let selectedVoice = null;
+        let conversationActive = false;
+
+        function loadVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            selectedVoice = voices.find(voice => voice.name.toLowerCase().includes('neerja'));
+
+            if (!selectedVoice) {
+                console.warn("Neerja voice not found. Using default voice.");
+            }
+        }
+
+        if (window.speechSynthesis.getVoices().length > 0) {
+            loadVoices();
+        } else {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
 
         function sendMessage() {
             const prompt = document.getElementById('prompt').value;
@@ -178,7 +262,7 @@
             userTypingIndicator.textContent = 'You are typing...';
             messages.appendChild(userTypingIndicator);
 
-            document.getElementById('prompt').value = ''; // Clear input field
+            document.getElementById('prompt').value = '';
 
             axios.post('/api/chat/', { prompt: prompt, job: "general" })
                 .then(response => {
@@ -198,11 +282,11 @@
                         messages.appendChild(botMessage);
 
                         if (["bye", "exit", "goodbye"].includes(prompt.toLowerCase())) {
-                            speakResponse("Ok bye! Have a good day!");
+                            handleExitCommand();
                         } else {
                             speakResponse(response.data.text);
                         }
-                    }, 1000); // Simulate typing delay
+                    }, 1000);
                 })
                 .catch(error => {
                     console.error(error);
@@ -214,28 +298,10 @@
                     messages.appendChild(botMessage);
                 });
         }
-        
-        function loadVoices() {
-            const voices = window.speechSynthesis.getVoices();
-            selectedVoice = voices.find(voice => voice.name.toLowerCase().includes('neerja'));
-
-            if (!selectedVoice) {
-                console.warn("Neerja voice not found. Using default voice.");
-            }
-        }
-
-        // Load voices when available
-        if (window.speechSynthesis.getVoices().length > 0) {
-            loadVoices();
-        } else {
-            window.speechSynthesis.onvoiceschanged = loadVoices;
-        }
 
         function speakResponse(text) {
-            // Stop any ongoing speech
             window.speechSynthesis.cancel();
-            
-            // Stop recognition if it's active
+
             if (isListening) {
                 recognition.stop();
                 isListening = false;
@@ -244,8 +310,7 @@
 
             const speech = new SpeechSynthesisUtterance(text);
             speech.lang = 'en-IN';
-            
-            // Set the preferred voice if available
+
             if (selectedVoice) {
                 speech.voice = selectedVoice;
             }
@@ -257,36 +322,63 @@
 
             speech.onend = () => {
                 isBotSpeaking = false;
-                // Restart recognition if it was active
-                if (isListening) {
+                if (conversationActive && !isListening) {
                     recognition.start();
+                    isListening = true;
                     document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice GIF">';
                 }
             };
 
-            // Cancel any ongoing speech before starting new one
-            window.speechSynthesis.cancel();
             window.speechSynthesis.speak(speech);
         }
 
         function updateMicButton() {
             const micBtn = document.getElementById('mic-btn');
             if (isBotSpeaking) {
-                micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                micBtn.innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
             } else {
-                micBtn.innerHTML = isListening 
-                    ? '<i class="fas fa-microphone"></i>' 
-                    : '<i class="fas fa-microphone-slash"></i>';
+                micBtn.innerHTML = isListening
+                    ? '<img src="/static/assets/voicegif.gif" alt="Voice GIF">'
+                    : '<img src="/static/assets/voicegif.gif" alt="Voice Inactive GIF">';
             }
         }
 
-        function toggleVoiceInput() {
+        function handleMicClick() {
             const micContainer = document.querySelector('.mic-container');
-            const micBtn = document.getElementById('mic-btn');
             const micStatus = document.querySelector('.mic-status');
 
-            micContainer.classList.toggle('active');
+            if (isFirstClick) {
+                // First click - start conversation
+                micContainer.classList.add('active');
+                startVoiceRecognition();
+                isFirstClick = false;
+                conversationActive = true;
+                return;
+            }
 
+            if (isBotSpeaking) {
+                // Requirement 3: Click while bot is speaking
+                window.speechSynthesis.cancel();
+                isBotSpeaking = false;
+                startVoiceRecognition();
+            } else {
+                // Toggle between bottom and center positions
+                if (micContainer.classList.contains('active')) {
+                    // Currently in center - move to bottom
+                    micContainer.classList.remove('active');
+                    if (isListening) {
+                        recognition.stop();
+                        isListening = false;
+                    }
+                } else {
+                    // Currently in bottom - move to center and restart
+                    micContainer.classList.add('active');
+                    startVoiceRecognition();
+                }
+            }
+        }
+
+        function startVoiceRecognition() {
             if (!('webkitSpeechRecognition' in window)) {
                 alert('Speech recognition is not supported in this browser.');
                 return;
@@ -295,78 +387,91 @@
             if (isListening) {
                 recognition.stop();
                 isListening = false;
-                micBtn.innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice GIF">';
-                micStatus.textContent = 'Responding...';
-                setTimeout(() => micStatus.textContent = '', 2000);
-            } else {
-                // If bot is speaking, stop it first
-                if (isBotSpeaking) {
-                    window.speechSynthesis.cancel();
-                    isBotSpeaking = false;
-                }
-
-                recognition = new webkitSpeechRecognition();
-                recognition.lang = 'en-US';
-                recognition.interimResults = false;
-                recognition.continuous = true;
-
-                recognition.onstart = function() {
-                    isListening = true;
-                    micBtn.innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
-                    micStatus.textContent = 'Listening...';
-                };
-
-                recognition.onresult = function(event) {
-                    const transcript = event.results[event.results.length - 1][0].transcript.trim();
-                    if (transcript) {
-                        const messages = document.getElementById('messages');
-                        const userMessage = document.createElement('div');
-                        userMessage.className = 'user-message';
-                        userMessage.textContent = transcript; // Display recognized speech
-                        messages.appendChild(userMessage);
-
-                        // Send the recognized speech to the chatbot
-                        axios.post('/api/chat/', { prompt: transcript, job: "general" })
-                            .then(response => {
-                                const botMessage = document.createElement('div');
-                                botMessage.className = 'bot-message';
-                                botMessage.textContent = response.data.text;
-                                messages.appendChild(botMessage);
-
-                                speakResponse(response.data.text); // Speak the bot's response
-                            })
-                            .catch(error => {
-                                console.error(error);
-                                const botMessage = document.createElement('div');
-                                botMessage.className = 'bot-message';
-                                botMessage.textContent = "Something went wrong. Please try again.";
-                                messages.appendChild(botMessage);
-                            });
-                    }
-                };
-
-                recognition.onerror = function(event) {
-                    console.error('Speech recognition error:', event.error);
-                    if (event.error !== 'no-speech') {
-                        alert('Voice input failed. Please try again.');
-                    }
-                    isListening = false;
-                    updateMicButton();
-                };
-
-                recognition.onend = function() {
-                    if (isListening) {
-                        // Restart recognition if it was active
-                        recognition.start();
-                    } else {
-                        micBtn.classList.remove('active');
-                        micBtn.innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice GIF">';
-                        micStatus.textContent = '';
-                    }
-                };
-
-                recognition.start();
+                updateMicButton();
+                return;
             }
+
+            recognition = new webkitSpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.continuous = true;
+
+            recognition.onstart = function () {
+                isListening = true;
+                document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
+                document.querySelector('.mic-status').textContent = 'Listening...';
+                conversationActive = true;
+            };
+
+            recognition.onresult = function (event) {
+                const transcript = event.results[event.results.length - 1][0].transcript.trim();
+                if (transcript) {
+                    const messages = document.getElementById('messages');
+                    const userMessage = document.createElement('div');
+                    userMessage.className = 'user-message';
+                    userMessage.textContent = transcript;
+                    messages.appendChild(userMessage);
+
+                    if (["bye", "exit", "goodbye"].some(cmd => transcript.toLowerCase().includes(cmd))) {
+                        handleExitCommand();
+                        return;
+                    }
+
+                    axios.post('/api/chat/', { prompt: transcript, job: "general" })
+                        .then(response => {
+                            const botMessage = document.createElement('div');
+                            botMessage.className = 'bot-message';
+                            botMessage.textContent = response.data.text;
+                            messages.appendChild(botMessage);
+
+                            speakResponse(response.data.text);
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            const botMessage = document.createElement('div');
+                            botMessage.className = 'bot-message';
+                            botMessage.textContent = "Something went wrong. Please try again.";
+                            messages.appendChild(botMessage);
+                        });
+                }
+            };
+
+            recognition.onerror = function (event) {
+                console.error('Speech recognition error:', event.error);
+                isListening = false;
+                updateMicButton();
+            };
+
+            recognition.onend = function () {
+                if (isListening && conversationActive) {
+                    recognition.start();
+                } else {
+                    updateMicButton();
+                }
+            };
+
+            recognition.start();
+        }
+
+        function handleExitCommand() {
+            // Requirement 5: Handle exit commands
+            speakResponse("Ok bye! Have a good day!");
+
+            // Close mic and reset
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+            }
+
+            // Move animation to bottom
+            document.querySelector('.mic-container').classList.remove('active');
+
+            // Reset conversation state
+            conversationActive = false;
+            isFirstClick = true;
+
+            // Update mic button
+            updateMicButton();
         }
 
         function toggleChat() {
@@ -377,4 +482,5 @@
         }
     </script>
 </body>
+
 </html>
