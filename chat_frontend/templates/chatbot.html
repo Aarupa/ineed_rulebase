@@ -32,11 +32,8 @@
             transition: all 0.5s ease-in-out;
             z-index: 1000;
             width: 120px;
-            /* Increased base size */
             height: 120px;
-            /* Ensure equal width and height */
             border-radius: 50%;
-            /* Make it a perfect circle */
         }
 
         .mic-container.active {
@@ -45,36 +42,26 @@
             left: 50%;
             transform: translate(-50%, -50%);
             width: 300px;
-            /* Further increased size */
             height: 300px;
-            /* Ensure equal width and height */
             border-radius: 50%;
-            /* Keep it circular */
         }
 
         .mic-container.active #mic-btn {
             width: 280px;
-            /* Slightly smaller than container */
             height: 280px;
-            /* Ensure equal width and height */
             border-radius: 50%;
-            /* Keep it circular */
         }
 
         .mic-container.active #mic-btn img {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            /* Ensure circular image */
             object-fit: cover;
-            /* Prevent distortion */
         }
 
         .mic-container.active .mic-status {
             font-size: 24px;
-            /* Increased font size */
             margin-top: 15px;
-            /* Adjusted spacing */
         }
 
         #mic-btn {
@@ -84,24 +71,19 @@
             outline: none;
             padding: 0;
             width: 100px;
-            /* Increased base size */
             height: 100px;
-            /* Ensure equal width and height */
             display: flex;
             justify-content: center;
             align-items: center;
             transition: all 0.3s ease-in-out;
             border-radius: 50%;
-            /* Make it a perfect circle */
         }
 
         #mic-btn img {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            /* Ensure the image is circular */
             object-fit: cover;
-            /* Prevent distortion */
         }
 
         .mic-status {
@@ -122,16 +104,88 @@
             max-width: 800px;
             width: 100%;
             margin: 0 auto;
-            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            background: #000;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2), -10px -10px 20px rgba(255, 255, 255, 0.5);
             height: 80vh;
+            overflow-y: auto;
+
+            /* Added subtle border and shadow */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+
+        #chat-window {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        #messages {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .user-message {
+            background: linear-gradient(145deg, #1a1a1a, #000);
+            align-self: flex-end;
+            color: #fff;
+            text-align: right;
+            border-radius: 15px 15px 0 15px;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5), -3px -3px 10px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .bot-message {
+            background: linear-gradient(145deg, #333, #000);
+            align-self: flex-start;
+            color: #f1f1f1;
+            text-align: left;
+            border-radius: 15px 15px 15px 0;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5), -3px -3px 10px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #messages>div {
+            padding: 12px 18px;
+            max-width: 75%;
+            line-height: 1.5;
+            word-wrap: break-word;
+            font-size: 16px;
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+        }
+
+        input#prompt {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            background-color: #111;
+            color: white;
+            outline: none;
+            border: 1px solid #444;
+            box-shadow: 0 0 4px #444;
+        }
+
+        form button {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            background-color: white;
+            color: black;
+            cursor: pointer;
         }
 
         #toggle-chat-btn {
             position: fixed;
-            top: 20px;
+            bottom: 20px;
             right: 20px;
             background: transparent;
             border: none;
@@ -143,7 +197,7 @@
 
         #menu-btn {
             position: fixed;
-            top: 20px;
+            bottom: 20px;
             left: 20px;
             background: transparent;
             border: none;
@@ -157,42 +211,41 @@
             .mic-container {
                 bottom: 10px;
                 width: 120px;
-                /* Increased size for mobile */
                 height: 120px;
-                /* Ensure equal width and height */
             }
 
             .mic-container.active {
                 width: 250px;
-                /* Increased size for mobile */
                 height: 250px;
-                /* Ensure equal width and height */
             }
 
             .mic-container.active #mic-btn {
                 width: 230px;
-                /* Slightly smaller than container */
                 height: 230px;
-                /* Ensure equal width and height */
             }
 
             #mic-btn {
                 width: 100px;
-                /* Increased base size for mobile */
                 height: 100px;
-                /* Ensure equal width and height */
+            }
+
+            #toggle-chat-btn,
+            #menu-btn {
+                top: 20px;
+                bottom: auto;
             }
 
             #toggle-chat-btn {
-                top: auto;
-                bottom: 20px;
                 right: 20px;
             }
 
             #menu-btn {
-                top: auto;
-                bottom: 20px;
                 left: 20px;
+            }
+
+            .chat-container {
+                border: none; /* Remove border */
+                box-shadow: none; /* Remove shadow */
             }
         }
     </style>
@@ -256,11 +309,13 @@
             userMessage.className = 'user-message';
             userMessage.textContent = prompt;
             messages.appendChild(userMessage);
+            scrollToBottom(); // Auto-scroll after adding user message
 
             const userTypingIndicator = document.createElement('div');
             userTypingIndicator.className = 'typing-indicator user-typing';
             userTypingIndicator.textContent = 'You are typing...';
             messages.appendChild(userTypingIndicator);
+            scrollToBottom(); // Auto-scroll after adding typing indicator
 
             document.getElementById('prompt').value = '';
 
@@ -272,6 +327,7 @@
                     botTypingIndicator.className = 'typing-indicator bot-typing';
                     botTypingIndicator.textContent = 'Bot is typing...';
                     messages.appendChild(botTypingIndicator);
+                    scrollToBottom(); // Auto-scroll after adding bot typing indicator
 
                     setTimeout(() => {
                         messages.removeChild(botTypingIndicator);
@@ -280,6 +336,7 @@
                         botMessage.className = 'bot-message';
                         botMessage.textContent = response.data.text;
                         messages.appendChild(botMessage);
+                        scrollToBottom(); // Auto-scroll after adding bot message
 
                         if (["bye", "exit", "goodbye"].includes(prompt.toLowerCase())) {
                             handleExitCommand();
@@ -296,6 +353,7 @@
                     botMessage.className = 'bot-message';
                     botMessage.textContent = "Something went wrong. Please try again.";
                     messages.appendChild(botMessage);
+                    scrollToBottom(); // Auto-scroll after error message
                 });
         }
 
@@ -479,6 +537,12 @@
             const micContainer = document.querySelector('.mic-container');
             chatContainer.style.display = chatContainer.style.display === 'flex' ? 'none' : 'flex';
             micContainer.style.display = micContainer.style.display === 'none' ? 'flex' : 'none';
+        }
+    </script>
+    <script>
+        function scrollToBottom() {
+            const chatWindow = document.getElementById('chat-window');
+            chatWindow.scrollTop = chatWindow.scrollHeight;
         }
     </script>
 </body>
