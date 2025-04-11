@@ -4,3 +4,8 @@
 *.sqlite3-wal
 *.pyc
 __pycache__/
+
+# History file
+history.json
+
+*.cpython-312*
