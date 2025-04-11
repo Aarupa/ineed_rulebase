@@ -21,7 +21,7 @@ openai-whisper
 spacy==3.8.0
 nltk
 textblob
-vaderSentiment
+vaderSentiment==3.3.2
 
 # Fuzzy Matching & Spell Check
 fuzzywuzzy
