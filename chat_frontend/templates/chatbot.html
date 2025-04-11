@@ -295,14 +295,20 @@
                 window.speechSynthesis.cancel();
                 isBotSpeaking = false;
                 startVoiceRecognition();
-            } else if (conversationActive) {
-                // Requirement 4: Click while bot is not speaking
-                micContainer.classList.remove('active');
-                if (isListening) {
-                    recognition.stop();
-                    isListening = false;
+            } else {
+                // Toggle between bottom and center positions
+                if (micContainer.classList.contains('active')) {
+                    // Currently in center - move to bottom
+                    micContainer.classList.remove('active');
+                    if (isListening) {
+                        recognition.stop();
+                        isListening = false;
+                    }
+                } else {
+                    // Currently in bottom - move to center and restart
+                    micContainer.classList.add('active');
+                    startVoiceRecognition();
                 }
-                updateMicButton();
             }
         }
 
@@ -328,6 +334,7 @@
                 isListening = true;
                 document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
                 document.querySelector('.mic-status').textContent = 'Listening...';
+                conversationActive = true;
             };
 
             recognition.onresult = function(event) {
