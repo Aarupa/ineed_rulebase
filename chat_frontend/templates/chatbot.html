@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,6 +31,12 @@
             flex-direction: column;
             transition: all 0.5s ease-in-out;
             z-index: 1000;
+            width: 120px;
+            /* Increased base size */
+            height: 120px;
+            /* Ensure equal width and height */
+            border-radius: 50%;
+            /* Make it a perfect circle */
         }
 
         .mic-container.active {
@@ -37,6 +44,37 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            width: 300px;
+            /* Further increased size */
+            height: 300px;
+            /* Ensure equal width and height */
+            border-radius: 50%;
+            /* Keep it circular */
+        }
+
+        .mic-container.active #mic-btn {
+            width: 280px;
+            /* Slightly smaller than container */
+            height: 280px;
+            /* Ensure equal width and height */
+            border-radius: 50%;
+            /* Keep it circular */
+        }
+
+        .mic-container.active #mic-btn img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            /* Ensure circular image */
+            object-fit: cover;
+            /* Prevent distortion */
+        }
+
+        .mic-container.active .mic-status {
+            font-size: 24px;
+            /* Increased font size */
+            margin-top: 15px;
+            /* Adjusted spacing */
         }
 
         #mic-btn {
@@ -45,23 +83,30 @@
             cursor: pointer;
             outline: none;
             padding: 0;
-            width: 60px;
-            height: 60px;
+            width: 100px;
+            /* Increased base size */
+            height: 100px;
+            /* Ensure equal width and height */
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: transform 0.3s ease-in-out;
+            transition: all 0.3s ease-in-out;
+            border-radius: 50%;
+            /* Make it a perfect circle */
         }
 
         #mic-btn img {
             width: 100%;
             height: 100%;
             border-radius: 50%;
+            /* Ensure the image is circular */
+            object-fit: cover;
+            /* Prevent distortion */
         }
 
         .mic-status {
             margin-top: 10px;
-            font-size: 16px;
+            font-size: 20px;
             color: white;
             text-align: center;
             display: none;
@@ -111,11 +156,31 @@
         @media (max-width: 768px) {
             .mic-container {
                 bottom: 10px;
+                width: 120px;
+                /* Increased size for mobile */
+                height: 120px;
+                /* Ensure equal width and height */
+            }
+
+            .mic-container.active {
+                width: 250px;
+                /* Increased size for mobile */
+                height: 250px;
+                /* Ensure equal width and height */
+            }
+
+            .mic-container.active #mic-btn {
+                width: 230px;
+                /* Slightly smaller than container */
+                height: 230px;
+                /* Ensure equal width and height */
             }
 
             #mic-btn {
-                width: 50px;
-                height: 50px;
+                width: 100px;
+                /* Increased base size for mobile */
+                height: 100px;
+                /* Ensure equal width and height */
             }
 
             #toggle-chat-btn {
@@ -132,6 +197,7 @@
         }
     </style>
 </head>
+
 <body>
     <button id="menu-btn">
         <i class="fas fa-bars"></i>
@@ -232,10 +298,10 @@
                     messages.appendChild(botMessage);
                 });
         }
-        
+
         function speakResponse(text) {
             window.speechSynthesis.cancel();
-            
+
             if (isListening) {
                 recognition.stop();
                 isListening = false;
@@ -244,7 +310,7 @@
 
             const speech = new SpeechSynthesisUtterance(text);
             speech.lang = 'en-IN';
-            
+
             if (selectedVoice) {
                 speech.voice = selectedVoice;
             }
@@ -271,8 +337,8 @@
             if (isBotSpeaking) {
                 micBtn.innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
             } else {
-                micBtn.innerHTML = isListening 
-                    ? '<img src="/static/assets/voicegif.gif" alt="Voice GIF">' 
+                micBtn.innerHTML = isListening
+                    ? '<img src="/static/assets/voicegif.gif" alt="Voice GIF">'
                     : '<img src="/static/assets/voicegif.gif" alt="Voice Inactive GIF">';
             }
         }
@@ -330,14 +396,14 @@
             recognition.interimResults = false;
             recognition.continuous = true;
 
-            recognition.onstart = function() {
+            recognition.onstart = function () {
                 isListening = true;
                 document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
                 document.querySelector('.mic-status').textContent = 'Listening...';
                 conversationActive = true;
             };
 
-            recognition.onresult = function(event) {
+            recognition.onresult = function (event) {
                 const transcript = event.results[event.results.length - 1][0].transcript.trim();
                 if (transcript) {
                     const messages = document.getElementById('messages');
@@ -370,13 +436,13 @@
                 }
             };
 
-            recognition.onerror = function(event) {
+            recognition.onerror = function (event) {
                 console.error('Speech recognition error:', event.error);
                 isListening = false;
                 updateMicButton();
             };
 
-            recognition.onend = function() {
+            recognition.onend = function () {
                 if (isListening && conversationActive) {
                     recognition.start();
                 } else {
@@ -390,20 +456,20 @@
         function handleExitCommand() {
             // Requirement 5: Handle exit commands
             speakResponse("Ok bye! Have a good day!");
-            
+
             // Close mic and reset
             if (isListening) {
                 recognition.stop();
                 isListening = false;
             }
-            
+
             // Move animation to bottom
             document.querySelector('.mic-container').classList.remove('active');
-            
+
             // Reset conversation state
             conversationActive = false;
             isFirstClick = true;
-            
+
             // Update mic button
             updateMicButton();
         }
@@ -416,4 +482,5 @@
         }
     </script>
 </body>
+
 </html>
