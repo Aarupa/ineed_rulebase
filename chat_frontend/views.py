@@ -113,8 +113,18 @@ def preprocess_recognized_text(text):
 def classify_query(msg):
     """Classify the query as company-related (FAQ) or general conversation."""
     msg_lower = msg.lower()
-    if msg_lower in ["hi", "hello", "hey", "hii"]:
-        return None, None
+    # List of possible greeting variants
+    greetings = ["hi", "hello", "hey", "hii", "hi ", "hi  ", "Hi ", "Hii "]
+
+    # Check if the message contains any of the greeting variants
+    if any(greeting in msg_lower for greeting in greetings):
+        return "greeting", random.choice([
+            "Hey there! How's your day going?",
+            "Hello! What’s up?",
+            "Hi! How can I assist you today?",
+            "Hi there! Ready to chat?"
+        ])
+
 
     for faq in faq_data['faqs']:
         if msg_lower == faq['question'].lower():
@@ -142,7 +152,7 @@ def classify_query(msg):
 def generate_nlp_response(msg):
     """Generate a basic NLP response for general conversation."""
     doc = nlp(msg)
-    if any(token.lower_ in ["hi", "hello", "hey", "hii"] for token in doc):
+    if any(token.lower_ in ["hi ", "hello", "hey", "hii"] for token in doc):
         return random.choice(["Hey there! How's your day going?", "Hello! What’s up?", "Hi! How can I assist you today?"])
     elif "how are you" in msg.lower():
         return random.choice(["I'm doing great, thanks for asking! How about you?", "I'm good! Hope you're having a great day too."])
