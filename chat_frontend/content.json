@@ -667,8 +667,7 @@
             "question": "Farewell message",
             "keywords": [
                 "bye",
-                "exit",
-                "goodbye"
+                "exit"
             ],
             "responses": [
                 "Ok bye! Have a good day!",
