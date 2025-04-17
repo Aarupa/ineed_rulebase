@@ -8,8 +8,8 @@ import logging
 from datetime import datetime, timedelta
 
 # Third-party imports
-import speech_recognition as sr  # type: ignore
-import pyttsx3  # type: ignore
+#import speech_recognition as sr  # type: ignore
+#import pyttsx3  # type: ignore
 import spacy  # type: ignore
 import nltk  # type: ignore
 from nltk.corpus import wordnet  # type: ignore
@@ -43,7 +43,7 @@ model_path = os.path.join(script_dir, 'db.sqlite3')
 nlp = spacy.load("en_core_web_sm")
 nltk.download('wordnet')
 sentiment_analyzer = SentimentIntensityAnalyzer()
-engine = pyttsx3.init()
+#engine = pyttsx3.init()
 
 # Initialize ChatterBot
 chatbot = ChatBot(
