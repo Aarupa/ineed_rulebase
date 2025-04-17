@@ -2,7 +2,11 @@
     "faqs": [
         {
             "question": "What is Indeed Inspiring Infotech?",
-            "regex": "(?i)\\b(company information|about company|company overview)\\b",
+            "keywords": [
+                "company information",
+                "about company",
+                "company overview"
+            ],
             "responses": [
                 "Indeed Inspiring Infotech is a tech-driven company specializing in IT solutions and training.",
                 "We are a company dedicated to bridging the gap between industry and academia through technology.",
@@ -11,7 +15,11 @@
         },
         {
             "question": "What is Indeed Inspiring Infotech",
-            "regex": "(?i)\\b(company information|about company|company overview)\\b",
+            "keywords": [
+                "company information",
+                "about company",
+                "company overview"
+            ],
             "responses": [
                 "Indeed Inspiring Infotech is a tech-driven company specializing in IT solutions and training.",
                 "We are a company dedicated to bridging the gap between industry and academia through technology.",
@@ -20,7 +28,11 @@
         },
         {
             "question": "Where is Indeed Inspiring Infotech located?",
-            "regex": "(?i)\\b(location|address|office)\\b",
+            "keywords": [
+                "location",
+                "address",
+                "office"
+            ],
             "responses": [
                 "The company is located at Flat No 401, Vrindavan Society, Near Samindradevi Market, BAIF Road, Wagholi, Pune MH - 412207.",
                 "You can find our office in Wagholi, Pune, Maharashtra, providing easy access for students and professionals alike.",
@@ -29,7 +41,11 @@
         },
         {
             "question": "What is the mission of Indeed Inspiring Infotech?",
-            "regex": "(?i)\\b(mission|vision|goal)\\b",
+            "keywords": [
+                "mission",
+                "vision",
+                "goal"
+            ],
             "responses": [
                 "The mission is to empower individuals and organizations with industry-relevant skills and training to enhance their professional growth.",
                 "We aim to bridge the skill gap between academia and industry through expert-led training programs.",
@@ -38,7 +54,11 @@
         },
         {
             "question": "Is Indeed Inspiring Infotech a registered company?",
-            "regex": "(?i)\\b(registered|legal status|company registration)\\b",
+            "keywords": [
+                "registered",
+                "legal status",
+                "company registration"
+            ],
             "responses": [
                 "Yes, Indeed Inspiring Infotech is a registered entity providing IT and training services.",
                 "We are a legally registered company in India, ensuring compliance with industry standards.",
@@ -47,7 +67,11 @@
         },
         {
             "question": "What industries does Indeed Inspiring Infotech cater to?",
-            "regex": "(?i)\\b(industries|sectors|clients)\\b",
+            "keywords": [
+                "industries",
+                "sectors",
+                "clients"
+            ],
             "responses": [
                 "The company caters to IT, education, corporate, and skill development industries.",
                 "Our services benefit professionals and students in IT, education, and corporate sectors.",
@@ -56,7 +80,10 @@
         },
         {
             "question": "What services does Indeed Inspiring Infotech provide?",
-            "regex": "(?i)\\b(services|offerings)\\b",
+            "keywords": [
+                "services",
+                "offerings"
+            ],
             "responses": [
                 "The company offers IT training, corporate training, fresher induction programs, and skill development programs.",
                 "Our services include professional IT training, career development, and hands-on industry workshops.",
@@ -65,7 +92,11 @@
         },
         {
             "question": "Does Indeed Inspiring Infotech provide online training?",
-            "regex": "(?i)\\b(online training|virtual training|remote learning)\\b",
+            "keywords": [
+                "online training",
+                "virtual training",
+                "remote learning"
+            ],
             "responses": [
                 "Yes, the company offers both online and offline training programs.",
                 "We provide flexible learning options, including virtual instructor-led and self-paced online courses.",
@@ -74,7 +105,11 @@
         },
         {
             "question": "What types of corporate training does Indeed Inspiring Infotech offer?",
-            "regex": "(?i)\\b(corporate training|company training|professional development)\\b",
+            "keywords": [
+                "corporate training",
+                "company training",
+                "professional development"
+            ],
             "responses": [
                 "They provide customized corporate training programs, including fresher induction, upskilling, and leadership development.",
                 "Our corporate training solutions are designed to enhance workforce productivity and skill development.",
@@ -83,7 +118,11 @@
         },
         {
             "question": "Does Indeed Inspiring Infotech offer placement assistance?",
-            "regex": "(?i)\\b(placement|job assistance|career support)\\b",
+            "keywords": [
+                "placement",
+                "job assistance",
+                "career support"
+            ],
             "responses": [
                 "Yes, they provide placement assistance to individuals who complete their training programs.",
                 "Our training includes career guidance and job placement support to help students transition into the workforce.",
@@ -92,7 +131,11 @@
         },
         {
             "question": "What is the duration of the training programs?",
-            "regex": "(?i)\\b(duration|course length|training period)\\b",
+            "keywords": [
+                "duration",
+                "course length",
+                "training period"
+            ],
             "responses": [
                 "The duration varies depending on the course, ranging from a few weeks to several months.",
                 "Our programs are designed to fit different learning needs, from short-term certifications to in-depth courses.",
@@ -101,7 +144,11 @@
         },
         {
             "question": "Are the training programs certified?",
-            "regex": "(?i)\\b(certification|certified courses|accreditation)\\b",
+            "keywords": [
+                "certification",
+                "certified courses",
+                "accreditation"
+            ],
             "responses": [
                 "Yes, the training programs come with certifications that are recognized by the industry.",
                 "We provide industry-accredited certifications upon successful course completion.",
@@ -110,7 +157,11 @@
         },
         {
             "question": "Does Indeed Inspiring Infotech provide hands-on training?",
-            "regex": "(?i)\\b(hands-on|practical training|live projects)\\b",
+            "keywords": [
+                "hands-on",
+                "practical training",
+                "live projects"
+            ],
             "responses": [
                 "Yes, the training programs include live projects and hands-on experience.",
                 "We focus on practical learning with real-world case studies and industry projects.",
@@ -119,7 +170,11 @@
         },
         {
             "question": "What is the fresher induction program?",
-            "regex": "(?i)\\b(fresher induction|new graduates|entry-level training)\\b",
+            "keywords": [
+                "fresher induction",
+                "new graduates",
+                "entry-level training"
+            ],
             "responses": [
                 "It is a training program designed to help fresh graduates transition into the corporate world.",
                 "Our fresher induction program equips new employees with the necessary skills to start their careers.",
@@ -128,7 +183,11 @@
         },
         {
             "question": "Does Indeed Inspiring Infotech offer weekend batches?",
-            "regex": "(?i)\\b(weekend batches|flexible timing|part-time courses)\\b",
+            "keywords": [
+                "weekend batches",
+                "flexible timing",
+                "part-time courses"
+            ],
             "responses": [
                 "Yes, they offer flexible batch timings, including weekend batches.",
                 "Our training programs are designed to accommodate working professionals with weekend classes.",
@@ -137,7 +196,11 @@
         },
         {
             "question": "Can I get a demo session before enrolling?",
-            "regex": "(?i)\\b(demo session|trial class|free demo)\\b",
+            "keywords": [
+                "demo session",
+                "trial class",
+                "free demo"
+            ],
             "responses": [
                 "Yes, demo sessions are available for prospective students.",
                 "We offer free trial sessions to help students understand our training methodology.",
@@ -146,7 +209,11 @@
         },
         {
             "question": "What courses does Indeed Inspiring Infotech offer?",
-            "regex": "(?i)\\b(courses|training programs|learning modules)\\b",
+            "keywords": [
+                "courses",
+                "training programs",
+                "learning modules"
+            ],
             "responses": [
                 "They offer courses in Data Science, Machine Learning, Business Analytics, and other IT-related domains.",
                 "Our training catalog includes AI, cloud computing, and full-stack development courses.",
@@ -155,7 +222,11 @@
         },
         {
             "question": "Are the courses updated with industry trends?",
-            "regex": "(?i)\\b(industry trends|updated courses|latest curriculum)\\b",
+            "keywords": [
+                "industry trends",
+                "updated courses",
+                "latest curriculum"
+            ],
             "responses": [
                 "Yes, the courses are regularly updated to align with industry requirements.",
                 "We continuously revise our curriculum to incorporate the latest technological advancements.",
@@ -164,7 +235,11 @@
         },
         {
             "question": "What is the fee structure for the courses?",
-            "regex": "(?i)\\b(fee structure|course fees|pricing)\\b",
+            "keywords": [
+                "fee structure",
+                "course fees",
+                "pricing"
+            ],
             "responses": [
                 "The fee structure varies depending on the course. You can contact the company for detailed information.",
                 "We offer flexible payment plans and discounts for group enrollments.",
@@ -173,7 +248,11 @@
         },
         {
             "question": "Do you offer courses for beginners?",
-            "regex": "(?i)\\b(beginners|entry-level|no experience)\\b",
+            "keywords": [
+                "beginners",
+                "entry-level",
+                "no experience"
+            ],
             "responses": [
                 "Yes, they offer beginner-friendly courses with no prior experience required.",
                 "Our programs are structured to accommodate learners with little to no technical background.",
@@ -182,7 +261,11 @@
         },
         {
             "question": "What is the eligibility criteria for enrolling in courses?",
-            "regex": "(?i)\\b(eligibility|requirements|prerequisites)\\b",
+            "keywords": [
+                "eligibility",
+                "requirements",
+                "prerequisites"
+            ],
             "responses": [
                 "Eligibility varies by course, but most programs require basic knowledge of IT concepts.",
                 "While some courses have prerequisites, we also offer foundation courses for beginners.",
@@ -191,7 +274,11 @@
         },
         {
             "question": "Do you provide study materials for the courses?",
-            "regex": "(?i)\\b(study materials|resources|learning materials)\\b",
+            "keywords": [
+                "study materials",
+                "resources",
+                "learning materials"
+            ],
             "responses": [
                 "Yes, study materials and resources are provided to all enrolled students.",
                 "Our courses include comprehensive study materials, e-books, and reference guides.",
@@ -200,7 +287,11 @@
         },
         {
             "question": "Are there any prerequisites for advanced courses?",
-            "regex": "(?i)\\b(prerequisites|advanced courses|prior knowledge)\\b",
+            "keywords": [
+                "prerequisites",
+                "advanced courses",
+                "prior knowledge"
+            ],
             "responses": [
                 "Yes, advanced courses may require prior knowledge or completion of beginner-level courses.",
                 "Some courses require a basic understanding of programming or IT concepts.",
@@ -209,7 +300,11 @@
         },
         {
             "question": "Do you offer courses in collaboration with universities?",
-            "regex": "(?i)\\b(university collaboration|academic partnerships|college programs)\\b",
+            "keywords": [
+                "university collaboration",
+                "academic partnerships",
+                "college programs"
+            ],
             "responses": [
                 "Yes, they collaborate with universities to provide academic training programs.",
                 "Our courses are designed in partnership with educational institutions for industry-aligned learning.",
@@ -218,7 +313,11 @@
         },
         {
             "question": "What is the mode of delivery for the courses?",
-            "regex": "(?i)\\b(delivery mode|online classes|offline training)\\b",
+            "keywords": [
+                "delivery mode",
+                "online classes",
+                "offline training"
+            ],
             "responses": [
                 "Courses are delivered through online platforms, in-person classes, or hybrid models.",
                 "We offer flexible training options, including live virtual sessions and classroom training.",
@@ -227,7 +326,11 @@
         },
         {
             "question": "Can I access recorded sessions after the course ends?",
-            "regex": "(?i)\\b(recorded sessions|course access|post-course materials)\\b",
+            "keywords": [
+                "recorded sessions",
+                "course access",
+                "post-course materials"
+            ],
             "responses": [
                 "Yes, recorded sessions are available for a limited time after the course completion.",
                 "We provide access to course recordings so students can revisit key concepts.",
@@ -236,7 +339,11 @@
         },
         {
             "question": "What is included in corporate training programs?",
-            "regex": "(?i)\\b(corporate training|company programs|employee development)\\b",
+            "keywords": [
+                "corporate training",
+                "company programs",
+                "employee development"
+            ],
             "responses": [
                 "Corporate training includes skill development, leadership training, and technical upskilling.",
                 "Our programs focus on improving workforce productivity through targeted training.",
@@ -245,7 +352,11 @@
         },
         {
             "question": "Can corporate training be customized?",
-            "regex": "(?i)\\b(customized training|tailored programs|company-specific training)\\b",
+            "keywords": [
+                "customized training",
+                "tailored programs",
+                "company-specific training"
+            ],
             "responses": [
                 "Yes, the programs are tailored to meet the specific needs of the organization.",
                 "We offer fully customizable training solutions for companies of all sizes.",
@@ -254,7 +365,11 @@
         },
         {
             "question": "Do you provide training for large organizations?",
-            "regex": "(?i)\\b(large organizations|enterprise training|corporate clients)\\b",
+            "keywords": [
+                "large organizations",
+                "enterprise training",
+                "corporate clients"
+            ],
             "responses": [
                 "Yes, they cater to organizations of all sizes, including large enterprises.",
                 "We have experience in delivering large-scale corporate training programs.",
@@ -263,7 +378,11 @@
         },
         {
             "question": "What is the duration of corporate training programs?",
-            "regex": "(?i)\\b(training duration|program length|corporate course duration)\\b",
+            "keywords": [
+                "training duration",
+                "program length",
+                "corporate course duration"
+            ],
             "responses": [
                 "The duration depends on the organization's requirements and can range from a few days to several weeks.",
                 "We offer flexible corporate training durations to suit business needs.",
@@ -272,7 +391,11 @@
         },
         {
             "question": "Do you provide training for non-IT professionals?",
-            "regex": "(?i)\\b(non-IT training|non-technical programs|cross-functional training)\\b",
+            "keywords": [
+                "non-IT training",
+                "non-technical programs",
+                "cross-functional training"
+            ],
             "responses": [
                 "Yes, they offer training programs for non-IT professionals as well.",
                 "Our courses include business skills, management training, and soft skills development.",
@@ -281,7 +404,11 @@
         },
         {
             "question": "What is the cost of corporate training programs?",
-            "regex": "(?i)\\b(cost|pricing|training fees)\\b",
+            "keywords": [
+                "cost",
+                "pricing",
+                "training fees"
+            ],
             "responses": [
                 "The cost varies based on the program's scope and duration. You can request a quote from the company.",
                 "Our corporate training pricing is flexible and depends on the number of participants and content customization.",
@@ -290,7 +417,11 @@
         },
         {
             "question": "Do you offer virtual corporate training?",
-            "regex": "(?i)\\b(virtual training|remote corporate training|online sessions)\\b",
+            "keywords": [
+                "virtual training",
+                "remote corporate training",
+                "online sessions"
+            ],
             "responses": [
                 "Yes, virtual training options are available for remote teams.",
                 "We provide interactive online corporate training sessions to accommodate remote employees.",
@@ -299,7 +430,11 @@
         },
         {
             "question": "What industries do you provide corporate training for?",
-            "regex": "(?i)\\b(industries|sectors|corporate clients)\\b",
+            "keywords": [
+                "industries",
+                "sectors",
+                "corporate clients"
+            ],
             "responses": [
                 "They provide training for IT, healthcare, finance, education, and other industries.",
                 "Our corporate training solutions cater to a wide range of industries, including technology and business sectors.",
@@ -308,7 +443,11 @@
         },
         {
             "question": "Do you provide post-training support for corporates?",
-            "regex": "(?i)\\b(post-training support|follow-up|training resources)\\b",
+            "keywords": [
+                "post-training support",
+                "follow-up",
+                "training resources"
+            ],
             "responses": [
                 "Yes, post-training support and resources are provided to ensure effective implementation.",
                 "We offer continuous learning support, including follow-up sessions and learning materials.",
@@ -317,7 +456,11 @@
         },
         {
             "question": "Can you conduct training at our company location?",
-            "regex": "(?i)\\b(on-site training|company location|in-house training)\\b",
+            "keywords": [
+                "on-site training",
+                "company location",
+                "in-house training"
+            ],
             "responses": [
                 "Yes, they offer on-site training programs at the company's location.",
                 "We provide in-house corporate training at your preferred location for convenience.",
@@ -326,7 +469,11 @@
         },
         {
             "question": "How does Indeed Inspiring Infotech collaborate with colleges?",
-            "regex": "(?i)\\b(college collaboration|academic partnerships|university programs)\\b",
+            "keywords": [
+                "college collaboration",
+                "academic partnerships",
+                "university programs"
+            ],
             "responses": [
                 "They collaborate with colleges to provide training programs that align with industry requirements.",
                 "Our academic partnerships help bridge the skill gap between students and the corporate world.",
@@ -335,7 +482,11 @@
         },
         {
             "question": "What are the benefits of academic collaboration?",
-            "regex": "(?i)\\b(benefits|college benefits|student advantages)\\b",
+            "keywords": [
+                "benefits",
+                "college benefits",
+                "student advantages"
+            ],
             "responses": [
                 "Benefits include enhanced employability, industry-relevant skills, and bridging the gap between academia and industry.",
                 "Students gain hands-on experience, industry exposure, and placement opportunities through our collaborations.",
@@ -344,7 +495,11 @@
         },
         {
             "question": "Do you provide certifications for college students?",
-            "regex": "(?i)\\b(certifications|student certificates|academic certifications)\\b",
+            "keywords": [
+                "certifications",
+                "student certificates",
+                "academic certifications"
+            ],
             "responses": [
                 "Yes, students receive certifications upon completing the training programs.",
                 "Our certifications are industry-recognized and enhance students' job prospects.",
@@ -353,7 +508,11 @@
         },
         {
             "question": "Can colleges request customized training programs?",
-            "regex": "(?i)\\b(customized programs|tailored training|college-specific courses)\\b",
+            "keywords": [
+                "customized programs",
+                "tailored training",
+                "college-specific courses"
+            ],
             "responses": [
                 "Yes, they offer customized training programs based on the college's curriculum and requirements.",
                 "We design tailor-made courses to align with the specific academic needs of educational institutions.",
@@ -362,7 +521,11 @@
         },
         {
             "question": "Do you organize workshops for college students?",
-            "regex": "(?i)\\b(workshops|student events|college workshops)\\b",
+            "keywords": [
+                "workshops",
+                "student events",
+                "college workshops"
+            ],
             "responses": [
                 "Yes, they organize workshops, seminars, and hackathons for students.",
                 "We conduct interactive workshops to help students gain hands-on learning experience.",
@@ -371,7 +534,11 @@
         },
         {
             "question": "What types of events does Indeed Inspiring Infotech organize?",
-            "regex": "(?i)\\b(events|workshops|hackathons)\\b",
+            "keywords": [
+                "events",
+                "workshops",
+                "hackathons"
+            ],
             "responses": [
                 "They organize workshops, hackathons, seminars, and virtual meetups.",
                 "Our events include hands-on training sessions, expert talks, and networking opportunities.",
@@ -380,7 +547,11 @@
         },
         {
             "question": "Are the events open to the public?",
-            "regex": "(?i)\\b(public events|open workshops|community events)\\b",
+            "keywords": [
+                "public events",
+                "open workshops",
+                "community events"
+            ],
             "responses": [
                 "Some events are open to the public, while others are exclusive to enrolled students or corporate clients.",
                 "We conduct both invite-only and open-for-all events, depending on the topic and target audience.",
@@ -389,7 +560,11 @@
         },
         {
             "question": "Do you charge for attending events?",
-            "regex": "(?i)\\b(event fees|registration cost|workshop pricing)\\b",
+            "keywords": [
+                "event fees",
+                "registration cost",
+                "workshop pricing"
+            ],
             "responses": [
                 "Some events are free, while others may have a registration fee.",
                 "We offer free introductory workshops, while advanced sessions may require a fee.",
@@ -398,7 +573,11 @@
         },
         {
             "question": "Can I participate in hackathons organized by Indeed Inspiring Infotech?",
-            "regex": "(?i)\\b(hackathons|coding competitions|tech events)\\b",
+            "keywords": [
+                "hackathons",
+                "coding competitions",
+                "tech events"
+            ],
             "responses": [
                 "Yes, hackathons are open to students, professionals, and enthusiasts.",
                 "We welcome participants of all skill levels to join our hackathons and showcase their talents.",
@@ -407,7 +586,11 @@
         },
         {
             "question": "Do you provide certificates for event participation?",
-            "regex": "(?i)\\b(event certificates|participation certificates|workshop certificates)\\b",
+            "keywords": [
+                "event certificates",
+                "participation certificates",
+                "workshop certificates"
+            ],
             "responses": [
                 "Yes, participants receive certificates for attending workshops and events.",
                 "We provide verifiable digital and printed certificates for event attendees.",
@@ -416,7 +599,12 @@
         },
         {
             "question": "How can I contact Indeed Inspiring Infotech?",
-            "regex": "(?i)\\b(contact|address|phone|email)\\b",
+            "keywords": [
+                "contact",
+                "address",
+                "phone",
+                "email"
+            ],
             "responses": [
                 "You can contact them via email at info@indeedinspiring.com or call (+91) 9850113269.",
                 "Feel free to reach out through our official email or visit our office in Pune.",
@@ -425,7 +613,11 @@
         },
         {
             "question": "Do you have a customer support team?",
-            "regex": "(?i)\\b(customer support|helpdesk|support team)\\b",
+            "keywords": [
+                "customer support",
+                "helpdesk",
+                "support team"
+            ],
             "responses": [
                 "Yes, they have a dedicated customer support team to assist with queries.",
                 "Our support team is available to answer your questions and provide guidance.",
@@ -434,7 +626,11 @@
         },
         {
             "question": "What are the working hours of Indeed Inspiring Infotech?",
-            "regex": "(?i)\\b(working hours|office timings|business hours)\\b",
+            "keywords": [
+                "working hours",
+                "office timings",
+                "business hours"
+            ],
             "responses": [
                 "The working hours are typically from 9:00 AM to 6:00 PM IST, Monday to Friday.",
                 "Our office operates during standard business hours, but training sessions may have flexible timings.",
@@ -443,7 +639,11 @@
         },
         {
             "question": "Can I visit the office for inquiries?",
-            "regex": "(?i)\\b(office visit|in-person inquiries|location visit)\\b",
+            "keywords": [
+                "office visit",
+                "in-person inquiries",
+                "location visit"
+            ],
             "responses": [
                 "Yes, you can visit their office in Pune during working hours.",
                 "Our office is open for visitors, and our team will be happy to assist you with your inquiries.",
@@ -452,7 +652,11 @@
         },
         {
             "question": "Do you have a social media presence?",
-            "regex": "(?i)\\b(social media|LinkedIn|Facebook)\\b",
+            "keywords": [
+                "social media",
+                "LinkedIn",
+                "Facebook"
+            ],
             "responses": [
                 "Yes, you can follow them on LinkedIn, Facebook, and other social media platforms for updates.",
                 "Stay connected with us through social media for news, updates, and event announcements.",
@@ -461,7 +665,11 @@
         },
         {
             "question": "Farewell message",
-            "regex": "(?i)\\b(bye|exit|goodbye)\\b",
+            "keywords": [
+                "bye",
+                "exit",
+                "goodbye"
+            ],
             "responses": [
                 "Ok bye! Have a good day!",
                 "Goodbye, take care and have a wonderful day ahead!",
@@ -470,157 +678,157 @@
         },
         {
             "question": "Who is Dr. Sachin Kumar Saxena?",
-            "regex": "(?i)\\b(sachin kumar saxena|azure data engineering|sachin saxena)\\b",
+            "keywords": ["sachin kumar saxena", "azure data engineering", "sachin saxena"],
             "responses": [
                 "Dr. Sachin Saxena is a Senior Data Analyst at Teleperformance, Portugal, with expertise in machine learning and data science. He will conduct a session on 'From Learning to Earning: Azure Data Engineering Career Guide' on 2 April from 11 am to 12 pm."
             ]
         },
         {
             "question": "What events are happening on 2 April?",
-            "regex": "(?i)\\b(2 april events|events on 2 april)\\b",
+            "keywords": ["2 april events", "events on 2 april"],
             "responses": [
                 "On 2 April, Dr. Sachin Kumar Saxena will conduct a session on 'From Learning to Earning: Azure Data Engineering Career Guide' from 11 am to 12 pm."
             ]
         },
         {
             "question": "Who is T P Dilip Kumar?",
-            "regex": "(?i)\\b(t p dilip kumar|leadership and marketing|dilip kumar)\\b",
+            "keywords": ["t p dilip kumar", "leadership and marketing", "dilip kumar"],
             "responses": [
                 "Mr. T P Dilip Kumar is a seasoned business leader specializing in strategy, people management, and sales excellence. He will conduct a session on 'Leadership and Marketing' on 3 April from 1:30 pm to 2:30 pm."
             ]
         },
         {
             "question": "Who is conducting the session on Leadership and Marketing?",
-            "regex": "(?i)\\b(leadership and marketing|dilip kumar session)\\b",
+            "keywords": ["leadership and marketing", "dilip kumar session"],
             "responses": [
                 "Mr. T P Dilip Kumar will conduct a session on 'Leadership and Marketing' on 3 April from 1:30 pm to 2:30 pm."
             ]
         },
         {
             "question": "What events are happening on 3 April?",
-            "regex": "(?i)\\b(3 april events|events on 3 april)\\b",
+            "keywords": ["3 april events", "events on 3 april"],
             "responses": [
                 "On 3 April, Mr. T P Dilip Kumar will conduct a session on 'Leadership and Marketing' from 1:30 pm to 2:30 pm."
             ]
         },
         {
             "question": "Who is Nimit Singh?",
-            "regex": "(?i)\\b(nimit singh|technical trainer|data driven decision making)\\b",
+            "keywords": ["nimit singh", "technical trainer", "data driven decision making"],
             "responses": [
                 "Mr. Nimit Singh is a skilled Technical Trainer with expertise in delivering comprehensive training on various technical subjects. He will participate in a panel discussion on 'Data Driven Decision Making in Business' on 4 April from 3 pm to 5 pm."
             ]
         },
         {
             "question": "What is the topic of Nimit Singh's session?",
-            "regex": "(?i)\\b(nimit singh session|data driven decision making)\\b",
+            "keywords": ["nimit singh session", "data driven decision making"],
             "responses": [
                 "Mr. Nimit Singh will participate in a panel discussion on 'Data Driven Decision Making in Business' on 4 April from 3 pm to 5 pm."
             ]
         },
         {
             "question": "What events are happening on 4 April?",
-            "regex": "(?i)\\b(4 april events|events on 4 april)\\b",
+            "keywords": ["4 april events", "events on 4 april"],
             "responses": [
                 "On 4 April, Mr. Nimit Singh will participate in a panel discussion on 'Data Driven Decision Making in Business' from 3 pm to 5 pm. Additionally, Mr. Smaranjit Ghose will conduct a session on 'Looking into GenAI from 2025' from 11 am to 12 pm."
             ]
         },
         {
             "question": "Who is Shivaleela Annamalai?",
-            "regex": "(?i)\\b(shivaleela annamalai|personality development|interview skills)\\b",
+            "keywords": ["shivaleela annamalai", "personality development", "interview skills"],
             "responses": [
                 "Shivaleela Annamalai is an expert in Personality Development & Interview Skills. She will conduct a session on 'Personality Development and Interview Skills' on 5 April from 11 am to 12 pm."
             ]
         },
         {
             "question": "What events are happening on 5 April?",
-            "regex": "(?i)\\b(5 april events|events on 5 april)\\b",
+            "keywords": ["5 april events", "events on 5 april"],
             "responses": [
                 "On 5 April, Shivaleela Annamalai will conduct a session on 'Personality Development and Interview Skills' from 11 am to 12 pm. Additionally, Mr. Peeyush Pareek will conduct a session on 'Mobile Application Development' from 10 am to 11 am, and Mr. Mohan Bhide will conduct a session on 'Challenge of 2030' from 2 pm to 3 pm."
             ]
         },
         {
             "question": "Who is Akshay Goud?",
-            "regex": "(?i)\\b(akshay goud|teamwork|public speaking)\\b",
+            "keywords": ["akshay goud", "teamwork", "public speaking"],
             "responses": [
                 "Mr. Akshay Goud is the Founder and Director of Guidance Group. He will conduct a session on 'Teamwork and Public Speaking' on 7 April from 10 am to 11 am."
             ]
         },
         {
             "question": "Who is conducting the session on Teamwork and Public Speaking?",
-            "regex": "(?i)\\b(teamwork and public speaking|akshay goud session)\\b",
+            "keywords": ["teamwork and public speaking", "akshay goud session"],
             "responses": [
                 "Mr. Akshay Goud will conduct a session on 'Teamwork and Public Speaking' on 7 April from 10 am to 11 am."
             ]
         },
         {
             "question": "What events are happening on 7 April?",
-            "regex": "(?i)\\b(7 april events|events on 7 april)\\b",
+            "keywords": ["7 april events", "events on 7 april"],
             "responses": [
                 "On 7 April, Mr. Akshay Goud will conduct a session on 'Teamwork and Public Speaking' from 10 am to 11 am."
             ]
         },
         {
             "question": "Who is Moin Anis Hassanfatta?",
-            "regex": "(?i)\\b(moin anis hassanfatta|full stack mern|mern development)\\b",
+            "keywords": ["moin anis hassanfatta", "full stack mern", "mern development"],
             "responses": [
                 "Moin Anis Hassanfatta is a passionate CBSE Financial Literacy Trainer and tech educator. He will conduct a session on 'Full Stack MERN' on 10 April from 10 am to 11 am."
             ]
         },
         {
             "question": "Who is conducting the session on Full Stack MERN?",
-            "regex": "(?i)\\b(full stack mern|moin anis hassanfatta session)\\b",
+            "keywords": ["full stack mern", "moin anis hassanfatta session"],
             "responses": [
                 "Moin Anis Hassanfatta will conduct a session on 'Full Stack MERN' on 10 April from 10 am to 11 am."
             ]
         },
         {
             "question": "What events are happening on 10 April?",
-            "regex": "(?i)\\b(10 april events|events on 10 april)\\b",
+            "keywords": ["10 april events", "events on 10 april"],
             "responses": [
                 "On 10 April, Moin Anis Hassanfatta will conduct a session on 'Full Stack MERN' from 10 am to 11 am."
             ]
         },
         {
             "question": "Who is Mr. Smaranjit Ghose?",
-            "regex": "(?i)\\b(smaranjit ghose|genai|generative ai)\\b",
+            "keywords": ["smaranjit ghose", "genai", "generative ai"],
             "responses": [
                 "Mr. Smaranjit Ghose is a seasoned data scientist and AI expert. He will conduct a session on 'Looking into GenAI from 2025' on 4 April from 11 am to 12 pm."
             ]
         },
         {
             "question": "Who is Mr. Peeyush Pareek?",
-            "regex": "(?i)\\b(peeyush pareek|mobile application development)\\b",
+            "keywords": ["peeyush pareek", "mobile application development"],
             "responses": [
                 "Mr. Peeyush Pareek is a senior faculty and technical trainer specializing in mobile app development. He will conduct a session on 'Mobile Application Development' on 5 April from 10 am to 11 am."
             ]
         },
         {
             "question": "Who is Mr. Mohan Bhide?",
-            "regex": "(?i)\\b(mohan bhide|challenge of 2030)\\b",
+            "keywords": ["mohan bhide", "challenge of 2030"],
             "responses": [
                 "Mr. Mohan Bhide is the Director of Swami Vivekananda Educational Institute. He will conduct a session on 'Challenge of 2030' on 5 April from 2 pm to 3 pm."
             ]
         },
         {
             "question": "What are the upcoming events?",
-            "regex": "(?i)\\b(upcoming events|future events)\\b",
+            "keywords": ["upcoming events", "future events"],
             "responses": [
                 "Upcoming events include:\n- 'From Learning to Earning: Azure Data Engineering Career Guide' by Dr. Sachin Kumar Saxena on 2 April.\n- 'Leadership and Marketing' by Mr. T P Dilip Kumar on 3 April.\n- 'Looking into GenAI from 2025' by Mr. Smaranjit Ghose on 4 April.\n- 'Personality Development and Interview Skills' by Shivaleela Annamalai on 5 April."
             ]
         },
         {
             "question": "What are the past events?",
-            "regex": "(?i)\\b(past events|completed events)\\b",
+            "keywords": ["past events", "completed events"],
             "responses": [
                 "Past events include:\n- 'Challenge of 2030' by Mr. Mohan Bhide on 5 April.\n- 'Teamwork and Public Speaking' by Mr. Akshay Goud on 7 April.\n- 'Full Stack MERN' by Moin Anis Hassanfatta on 10 April."
             ]
         },
         {
             "question": "What are the current events?",
-            "regex": "(?i)\\b(current events|ongoing events)\\b",
+            "keywords": ["current events", "ongoing events"],
             "responses": [
                 "Currently, there are no ongoing events. Please check the schedule for upcoming events."
             ]
         }
-    ]
+]
 }
