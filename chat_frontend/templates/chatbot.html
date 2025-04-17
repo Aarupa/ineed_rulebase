@@ -284,6 +284,7 @@
         let isFirstClick = true;
         let selectedVoice = null;
         let conversationActive = false;
+        let wakeWordDetected = false;
 
         function loadVoices() {
             const voices = window.speechSynthesis.getVoices();
@@ -405,12 +406,12 @@
             const micContainer = document.querySelector('.mic-container');
             const micStatus = document.querySelector('.mic-status');
 
-            if (isFirstClick) {
-                // First click - start conversation
+            if (!conversationActive) {
+                // First interaction - start conversation
                 micContainer.classList.add('active');
-                startVoiceRecognition();
-                isFirstClick = false;
+                startVoiceRecognition(true);
                 conversationActive = true;
+                wakeWordDetected = true; // Consider click as wake word
                 return;
             }
 
@@ -436,13 +437,13 @@
             }
         }
 
-        function startVoiceRecognition() {
+        function startVoiceRecognition(initialStart = false) {
             if (!('webkitSpeechRecognition' in window)) {
                 alert('Speech recognition is not supported in this browser.');
                 return;
             }
 
-            if (isListening) {
+            if (isListening && !initialStart) {
                 recognition.stop();
                 isListening = false;
                 updateMicButton();
@@ -450,7 +451,7 @@
             }
 
             recognition = new webkitSpeechRecognition();
-            recognition.lang = 'en-US';
+            recognition.lang = 'en-IN';
             recognition.interimResults = false;
             recognition.continuous = true;
 
@@ -458,12 +459,50 @@
                 isListening = true;
                 document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
                 document.querySelector('.mic-status').textContent = 'Listening...';
-                conversationActive = true;
+                
+                if (!wakeWordDetected && !initialStart) {
+                    document.querySelector('.mic-status').textContent = 'Hello! I am Infi. How can I help you today?';
+                }
             };
 
             recognition.onresult = function (event) {
                 const transcript = event.results[event.results.length - 1][0].transcript.trim();
                 if (transcript) {
+                    // Check for wake word if conversation hasn't started yet
+                    if (!wakeWordDetected) {
+                        const wakeWords = [
+                            "hi infi", "hi infee", "hi infy", "hi infie", "hi infey",
+                            "hii infi", "hii infee", "hii infy", "hii infie", "hii infey",
+                            "hello infi", "hello infee", "hello infy", "hello infie", "hello infey",
+                            "helloo infi", "helloo infee", "helloo infy", "helloo infie", "helloo infey",
+                            "hey infi", "hey infee", "hey infy", "hey infie", "hey infey",
+                            "heyy infi", "heyy infee", "heyy infy", "heyy infie", "heyy infey",
+                            "heya infi", "heya infee", "heya infy", "heya infie", "heya infey",
+                            "yo infi", "yo infee", "yo infy", "yo infie", "yo infey",
+                            "sup infi", "sup infee", "sup infy", "sup infie", "sup infey"
+                            ];
+                        const foundWakeWord = wakeWords.some(word => 
+                            transcript.toLowerCase().includes(word)
+                        );
+                        
+                        if (foundWakeWord) {
+                            wakeWordDetected = true;
+                            const messages = document.getElementById('messages');
+                            const botMessage = document.createElement('div');
+                            botMessage.className = 'bot-message';
+                            botMessage.textContent = "Hello! How can I help you today?";
+                            messages.appendChild(botMessage);
+                            speakResponse("Hello! How can I help you today?");
+                            conversationActive = true;
+                            document.querySelector('.mic-container').classList.add('active');
+                            return;
+                        } else {
+                            // Ignore all other input until wake word is detected
+                            return;
+                        }
+                    }
+
+                    // Normal conversation flow
                     const messages = document.getElementById('messages');
                     const userMessage = document.createElement('div');
                     userMessage.className = 'user-message';
@@ -526,7 +565,7 @@
 
             // Reset conversation state
             conversationActive = false;
-            isFirstClick = true;
+            wakeWordDetected = false;
 
             // Update mic button
             updateMicButton();
@@ -538,6 +577,11 @@
             chatContainer.style.display = chatContainer.style.display === 'flex' ? 'none' : 'flex';
             micContainer.style.display = micContainer.style.display === 'none' ? 'flex' : 'none';
         }
+
+        // Initialize mic on page load
+        window.onload = function() {
+            startVoiceRecognition();
+        };
     </script>
     <script>
         function scrollToBottom() {

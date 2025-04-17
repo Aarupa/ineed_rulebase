@@ -69,6 +69,9 @@ if os.path.exists(dialogue_history_path):
 # Load Whisper model
 whisper_model = whisper.load_model("tiny")
 
+# Add chatbot's name
+CHATBOT_NAME = "Infee"
+
 # -------------------- Utility Functions --------------------
 def save_conversation_to_file(user_message, response):
     """Save the conversation to a JSON file as key-value pairs."""
@@ -113,18 +116,14 @@ def preprocess_recognized_text(text):
 def classify_query(msg):
     """Classify the query as company-related (FAQ) or general conversation."""
     msg_lower = msg.lower()
-    # List of possible greeting variants
-    greetings = ["hi", "hello", "hey", "hii", "hi ", "hi  ", "Hi ", "Hii "]
+    # Handle "What is your name?" query
+    if "what is your name" in msg_lower or "your name" in msg_lower:
+        return "general_convo", f"My name is {CHATBOT_NAME}."
 
-    # Check if the message contains any of the greeting variants
+    greetings = [f"hey {CHATBOT_NAME.lower()}", f"hi {CHATBOT_NAME.lower()}","hi ","Hi ","hi  ","Hi  ","hello ","Hello ","hey ","Hey ","hii ","Hii ","hii  ","Hii  "]
+
     if any(greeting in msg_lower for greeting in greetings):
-        return "greeting", random.choice([
-            "Hey there! How's your day going?",
-            "Hello! What’s up?",
-            "Hi! How can I assist you today?",
-            "Hi there! Ready to chat?"
-        ])
-
+        return "greeting", f"Hello! I'm {CHATBOT_NAME}. How can I assist you today?"
 
     for faq in faq_data['faqs']:
         if msg_lower == faq['question'].lower():
