@@ -42,6 +42,7 @@ conversations:
 - - What's up?
   - Just chilling. You?
 - - What's up?
+<<<<<<< HEAD
   - All good here!
 - - What's up?
   - The sky's up!
@@ -65,3 +66,11 @@ conversations:
   - All good here! How about you?
 - - Howdy
   - Howdy partner!
+=======
+  - The sky's up but I'm fine thanks. What about you?
+- - good
+  - Awesome! Glad it worked for you
+  - Great! Glad to hear that
+  - Glad that helped! 
+
+>>>>>>> Akanksha_3rd
