@@ -4,6 +4,10 @@
 *.sqlite3-wal
 *.cpython-312*
 
+# Ignore all database files
+*.db
+*.db-journal
+
 # History file
 history.json
 
