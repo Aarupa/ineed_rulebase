@@ -100,11 +100,12 @@ def analyze_sentiment(msg):
         return "negative"
     return "neutral"
 
-def preprocess_recognized_text(text):
+def preprocess_recognized_text(text): 
     """Correct common misinterpretations in recognized speech."""
     corrections = {
         "crushal": "prushal",
         "india": "indeed",
+        "indiaa": "indeed",
         "ended": "indeed",
         "inspiron": "inspiring",
         "inspire ring": "inspiring"
