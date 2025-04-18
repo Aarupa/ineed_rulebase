@@ -13,11 +13,11 @@ conversations:
   - That is good to hear
   - Yes it is.
   - Can I help you with anything?
-  - Yes, I have a question.
   - What is your question?
-  - I'm sorry, but I don't have any.
   - Thank you anyway
-  - No problem
+  - I am here to assist you, brought to you by Indeed Inspiring Infotech.
+- - Hi
+  - Hello
 - - How are you doing?
   - I am doing well, how about you?
   - I am also good.
@@ -50,3 +50,8 @@ conversations:
   - I am a virtual assistant created to make your life easier with Indeed Inspiring Infotech's technology.
 - - Okay
   - Sure, let me know how I can assist you.
+- - Good.
+  - Thanks!
+  - Glad to hear that.
+  - That's great to hear.
+  - Awesome! Glad it worked for you.
