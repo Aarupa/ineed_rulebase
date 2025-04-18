@@ -69,6 +69,9 @@ if os.path.exists(dialogue_history_path):
 # Load Whisper model
 whisper_model = whisper.load_model("tiny")
 
+# Add a global dictionary to track the last used response for each question
+last_response_map = {}
+
 # -------------------- Utility Functions --------------------
 def save_conversation_to_file(user_message, response):
     """Save the conversation to a JSON file as key-value pairs."""
@@ -112,13 +115,38 @@ def preprocess_recognized_text(text):
 # -------------------- Chatbot Logic --------------------
 def classify_query(msg):
     """Classify the query as company-related (FAQ) or general conversation."""
+    global last_response_map
     msg_lower = msg.lower()
     if msg_lower in ["hi", "hello", "hey", "hii"]:
         return None, None
 
     for faq in faq_data['faqs']:
         if msg_lower == faq['question'].lower():
-            return "company", random.choice(faq['responses'])
+            # Get the list of responses for the question
+            responses = faq['responses']
+            
+            # Get the last used response for this question
+            last_response = last_response_map.get(faq['question'], None)
+            
+            # Filter responses to exclude the last used one
+            available_responses = [response for response in responses if response != last_response]
+            
+            # If all responses have been used, reset the available responses
+            if not available_responses:
+                available_responses = responses
+            
+            # Randomly select a new response
+            new_response = random.choice(available_responses)
+            
+            # If there was a previous response, prepend "As I previously mentioned"
+            if last_response:
+                new_response = f"As I previously mentioned: {new_response}"
+            
+            # Update the last used response for this question
+            last_response_map[faq['question']] = new_response
+            
+            # Return the new response
+            return "company", new_response
 
     keywords = [keyword for faq in faq_data['faqs'] for keyword in faq['keywords']]
     best_match = get_best_match(msg_lower, keywords)
@@ -128,13 +156,58 @@ def classify_query(msg):
         for faq in faq_data['faqs']:
             if best_match in faq['keywords']:
                 suggested_question = faq['question']
-                response = random.choice(faq['responses'])
-                return "company", f"Did you mean '{suggested_question}'?\n {response}"
+                responses = faq['responses']
+                
+                # Get the last used response for this question
+                last_response = last_response_map.get(faq['question'], None)
+                
+                # Filter responses to exclude the last used one
+                available_responses = [response for response in responses if response != last_response]
+                
+                # If all responses have been used, reset the available responses
+                if not available_responses:
+                    available_responses = responses
+                
+                # Randomly select a new response
+                new_response = random.choice(available_responses)
+                
+                # If there was a previous response, prepend "As I previously mentioned"
+                if last_response:
+                    new_response = f"As I previously mentioned: {last_response}\n{new_response}"
+                
+                # Update the last used response for this question
+                last_response_map[faq['question']] = new_response
+                
+                # Return the new response
+                return "company", f"Did you mean '{suggested_question}'?\n{new_response}"
 
     if best_match:
         for faq in faq_data['faqs']:
             if best_match in faq['keywords']:
-                return "company", random.choice(faq['responses'])
+                responses = faq['responses']
+                
+                # Get the last used response for this question
+                last_response = last_response_map.get(faq['question'], None)
+                
+                # Filter responses to exclude the last used one
+                available_responses = [response for response in responses if response != last_response]
+                
+                # If all responses have been used, reset the available responses
+                if not available_responses:
+                    available_responses = responses
+                
+                # Randomly select a new response
+                new_response = random.choice(available_responses)
+                
+                # If there was a previous response, prepend "As I previously mentioned"
+                if last_response:
+                    new_response = f"As I previously mentioned: {last_response}\n{new_response}"
+                
+                # Update the last used response for this question
+                last_response_map[faq['question']] = new_response
+                
+                # Return the new response
+                return "company", new_response
 
     response = chatbot.get_response(msg_lower)
     return "general_convo", str(response) if response else None
