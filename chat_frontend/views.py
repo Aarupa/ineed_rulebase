@@ -69,6 +69,9 @@ if os.path.exists(dialogue_history_path):
 # Load Whisper model
 whisper_model = whisper.load_model("tiny")
 
+# Add chatbot's name
+CHATBOT_NAME = "Infee"
+
 # -------------------- Utility Functions --------------------
 def save_conversation_to_file(user_message, response):
     """Save the conversation to a JSON file as key-value pairs."""
@@ -97,11 +100,12 @@ def analyze_sentiment(msg):
         return "negative"
     return "neutral"
 
-def preprocess_recognized_text(text):
+def preprocess_recognized_text(text): 
     """Correct common misinterpretations in recognized speech."""
     corrections = {
         "crushal": "prushal",
         "india": "indeed",
+        "indiaa": "indeed",
         "ended": "indeed",
         "inspiron": "inspiring",
         "inspire ring": "inspiring"
@@ -113,8 +117,14 @@ def preprocess_recognized_text(text):
 def classify_query(msg):
     """Classify the query as company-related (FAQ) or general conversation."""
     msg_lower = msg.lower()
-    if msg_lower in ["hi", "hello", "hey", "hii"]:
-        return None, None
+    # Handle "What is your name?" query
+    if "what is your name" in msg_lower or "your name" in msg_lower:
+        return "general_convo", f"My name is {CHATBOT_NAME}."
+
+    greetings = [f"hey {CHATBOT_NAME.lower()}", f"hi {CHATBOT_NAME.lower()}","hi ","Hi ","hi  ","Hi  ","hello ","Hello ","hey ","Hey ","hii ","Hii ","hii  ","Hii  "]
+
+    if any(greeting in msg_lower for greeting in greetings):
+        return "greeting", f"Hello! I'm {CHATBOT_NAME}. How can I assist you today?"
 
     for faq in faq_data['faqs']:
         if msg_lower == faq['question'].lower():
@@ -142,7 +152,7 @@ def classify_query(msg):
 def generate_nlp_response(msg):
     """Generate a basic NLP response for general conversation."""
     doc = nlp(msg)
-    if any(token.lower_ in ["hi", "hello", "hey", "hii"] for token in doc):
+    if any(token.lower_ in ["hi ", "hello", "hey", "hii"] for token in doc):
         return random.choice(["Hey there! How's your day going?", "Hello! What’s up?", "Hi! How can I assist you today?"])
     elif "how are you" in msg.lower():
         return random.choice(["I'm doing great, thanks for asking! How about you?", "I'm good! Hope you're having a great day too."])
