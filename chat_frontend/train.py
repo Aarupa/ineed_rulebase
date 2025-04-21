@@ -42,33 +42,38 @@ conn = sqlite3.connect("db.sqlite3")  # ChatterBot's DB
 cursor = conn.cursor()
 print("Connected to the database.")  # Debug: Connection status
 
-# Step 3: Delete rows from Statement table where text matches any clean line
-for line in all_clean_lines:
-    print(f"Checking for statement: '{line}'")  # Debug: Currently checking statement
-    cursor.execute("SELECT id, text FROM statement WHERE LOWER(text) = LOWER(?)", (line,))
-    statement_ids = cursor.fetchall()
-    
-    if statement_ids:
-        print(f"Found {len(statement_ids)} matching rows for: '{line}'")  # Debug: Found matching rows
-    else:
-        print(f"No matching rows found for: '{line}'")  # Debug: No match for current line
-
-    for statement_id in statement_ids:
-        # Debug: Deleting associated rows
-        print(f"Deleting associated rows for statement ID: {statement_id[0]}")  
+try:
+    # Step 3: Delete rows from Statement table where text matches any clean line
+    for line in all_clean_lines:
+        print(f"Checking for statement: '{line}'")  # Debug: Currently checking statement
+        cursor.execute("SELECT id, text FROM statement WHERE LOWER(text) = LOWER(?)", (line,))
+        statement_ids = cursor.fetchall()
         
-        # First, delete from the tag_association table where statement_id matches
-        cursor.execute("DELETE FROM tag_association WHERE statement_id = ?", (statement_id[0],))
-        
-        # Then, delete the statement itself
-        cursor.execute("DELETE FROM statement WHERE id = ?", (statement_id[0],))
+        if statement_ids:
+            print(f"Found {len(statement_ids)} matching rows for: '{line}'")  # Debug: Found matching rows
+        else:
+            print(f"No matching rows found for: '{line}'")  # Debug: No match for current line
 
-# Step 4: Commit changes
-conn.commit()
-print("Changes committed to the database.")  # Debug: Committing changes
+        for statement_id in statement_ids:
+            # Debug: Deleting associated rows
+            print(f"Deleting associated rows for statement ID: {statement_id[0]}")  
+            
+            # First, delete from the tag_association table where statement_id matches
+            cursor.execute("DELETE FROM tag_association WHERE statement_id = ?", (statement_id[0],))
+            
+            # Then, delete the statement itself
+            cursor.execute("DELETE FROM statement WHERE id = ?", (statement_id[0],))
 
-# Step 5: Close the connection
-conn.close()
-print("Database connection closed.")  # Debug: Closing connection
+    # Step 4: Commit changes
+    conn.commit()
+    print("Changes committed to the database.")  # Debug: Committing changes
+
+except sqlite3.Error as e:
+    print(f"An error occurred: {e}")  # Debug: Print any database errors
+
+finally:
+    # Step 5: Close the connection
+    conn.close()
+    print("Database connection closed.")  # Debug: Closing connection
 
 print("Matching rows deleted from Statement and related entries removed from tag_association.")

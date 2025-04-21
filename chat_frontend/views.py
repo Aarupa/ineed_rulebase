@@ -27,6 +27,7 @@ from django.views.decorators.csrf import csrf_exempt  # type: ignore
 from django.shortcuts import render  # type: ignore
 from django.conf import settings  # type: ignore
 from django.template.loader import get_template  # type: ignore
+from django.utils.cache import add_never_cache_headers
 
 # ChatterBot imports
 from chatterbot import ChatBot  # type: ignore
@@ -43,7 +44,8 @@ model_path = os.path.join(script_dir, 'db.sqlite3')
 nlp = spacy.load("en_core_web_sm")
 nltk.download('wordnet')
 sentiment_analyzer = SentimentIntensityAnalyzer()
-#engine = pyttsx3.init()
+
+
 
 # Initialize ChatterBot
 chatbot = ChatBot(
@@ -116,7 +118,6 @@ def preprocess_recognized_text(text):
 # -------------------- Chatbot Logic --------------------
 def classify_query(msg):
     """Classify the query as company-related (FAQ) or general conversation."""
-    global last_response_map
     msg_lower = msg.lower()
     # Handle "What is your name?" query
     if "what is your name" in msg_lower or "your name" in msg_lower:
@@ -129,31 +130,7 @@ def classify_query(msg):
 
     for faq in faq_data['faqs']:
         if msg_lower == faq['question'].lower():
-            # Get the list of responses for the question
-            responses = faq['responses']
-            
-            # Get the last used response for this question
-            last_response = last_response_map.get(faq['question'], None)
-            
-            # Filter responses to exclude the last used one
-            available_responses = [response for response in responses if response != last_response]
-            
-            # If all responses have been used, reset the available responses
-            if not available_responses:
-                available_responses = responses
-            
-            # Randomly select a new response
-            new_response = random.choice(available_responses)
-            
-            # If there was a previous response, prepend "As I previously mentioned"
-            if last_response:
-                new_response = f"As I previously mentioned: {new_response}"
-            
-            # Update the last used response for this question
-            last_response_map[faq['question']] = new_response
-            
-            # Return the new response
-            return "company", new_response
+            return "company", random.choice(faq['responses'])
 
     keywords = [keyword for faq in faq_data['faqs'] for keyword in faq['keywords']]
     best_match = get_best_match(msg_lower, keywords)
@@ -163,61 +140,17 @@ def classify_query(msg):
         for faq in faq_data['faqs']:
             if best_match in faq['keywords']:
                 suggested_question = faq['question']
-                responses = faq['responses']
-                
-                # Get the last used response for this question
-                last_response = last_response_map.get(faq['question'], None)
-                
-                # Filter responses to exclude the last used one
-                available_responses = [response for response in responses if response != last_response]
-                
-                # If all responses have been used, reset the available responses
-                if not available_responses:
-                    available_responses = responses
-                
-                # Randomly select a new response
-                new_response = random.choice(available_responses)
-                
-                # If there was a previous response, prepend "As I previously mentioned"
-                if last_response:
-                    new_response = f"As I previously mentioned: {last_response}\n{new_response}"
-                
-                # Update the last used response for this question
-                last_response_map[faq['question']] = new_response
-                
-                # Return the new response
-                return "company", f"Did you mean '{suggested_question}'?\n{new_response}"
+                response = random.choice(faq['responses'])
+                return "company", f"Did you mean '{suggested_question}'?\n {response}"
 
     if best_match:
         for faq in faq_data['faqs']:
             if best_match in faq['keywords']:
-                responses = faq['responses']
-                
-                # Get the last used response for this question
-                last_response = last_response_map.get(faq['question'], None)
-                
-                # Filter responses to exclude the last used one
-                available_responses = [response for response in responses if response != last_response]
-                
-                # If all responses have been used, reset the available responses
-                if not available_responses:
-                    available_responses = responses
-                
-                # Randomly select a new response
-                new_response = random.choice(available_responses)
-                
-                # If there was a previous response, prepend "As I previously mentioned"
-                if last_response:
-                    new_response = f"As I previously mentioned: {last_response}\n{new_response}"
-                
-                # Update the last used response for this question
-                last_response_map[faq['question']] = new_response
-                
-                # Return the new response
-                return "company", new_response
+                return "company", random.choice(faq['responses'])
 
     response = chatbot.get_response(msg_lower)
     return "general_convo", str(response) if response else None
+
 
 def generate_nlp_response(msg):
     """Generate a basic NLP response for general conversation."""
@@ -329,8 +262,14 @@ def get_response(request):
     global conversation_history
     if request.method == 'POST':
         data = json.loads(request.body)
-        user_message = data.get('prompt', '')
+        user_message = data.get('prompt', '').strip()
         if user_message:
+            # Check if the question is already in conversation history
+            for question, response in conversation_history:
+                if question.lower() == user_message.lower():
+                    # If the question exists, prepend "As I previously mentioned"
+                    return JsonResponse({'text': f"As I previously mentioned: {response}"})
+
             # Handle date-related queries first
             date_related_response = handle_date_related_queries(user_message)
             if date_related_response:
@@ -361,6 +300,8 @@ def get_response(request):
 
             # Fallback to NLP response
             response = generate_nlp_response(user_message)
+            conversation_history.append((user_message, response))
+            save_conversation_to_file(user_message, response)
             return JsonResponse({'text': response})
     return JsonResponse({'text': 'Invalid request'}, status=400)
 
@@ -374,8 +315,11 @@ def clear_history(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
 def chat(request):
-    """Render the chatbot HTML template."""
+    """Render the chatbot HTML template and clear conversation history on page load."""
+    global conversation_history
     try:
+        # Clear the conversation history
+        conversation_history.clear()
         return render(request, 'chatbot.html')
     except Exception as e:
         logging.error(f"Error loading template: {e}")
@@ -397,6 +341,7 @@ def speak(text):
 
 def listen():
     """Toggle microphone to listen continuously until user says 'bye' or 'exit'."""
+    global conversation_history
     import sounddevice as sd
     import numpy as np
     from scipy.io.wavfile import write
@@ -407,7 +352,7 @@ def listen():
     while True:
         command = input("Press Enter to toggle mic or type 'exit' to quit: ").strip().lower()
         if command in ["exit", "bye", "bye bye"]:
-            conversation_history.clear()
+            conversation_history.clear()  # Clear conversation history
             print("Exiting the chat. Goodbye!")
             break
 
@@ -429,7 +374,7 @@ def listen():
                 os.remove(temp_audio_path)
                 os.remove(mp3_path)
                 if "bye" in user_message.lower() or "exit" in user_message.lower():
-                    conversation_history.clear()
+                    conversation_history.clear()  # Clear conversation history
                     print("Exiting the chat. Goodbye!")
                     mic_active = False
                     break

@@ -2,75 +2,52 @@ categories:
 - greetings
 conversations:
 - - Hello
-  - Hi there!
+  - Hi
 - - Hi
-  - Hello!
+  - Hello
 - - Greetings!
-  - Hello!
+  - Hello
 - - Hello
   - Greetings!
-- - Hi, how is it going?
-  - It's going well, thank you!
-- - Hi, how is it going?
-  - I'm doing great!
-- - Hi, how is it going?
-  - Pretty good!
-- - Hi, how is it going?
-  - Not bad, thanks!
+- - Hi, How is it going?
+  - Good
+- - Hi, How is it going?
+  - Fine
+- - Hi, How is it going?
+  - Okay
+- - Hi, How is it going?
+  - Great
 - - How are you doing?
-  - I'm good, how about you?
+  - Good.
 - - How are you doing?
-  - Very well, thanks!
+  - Very well, thanks.
 - - How are you doing?
-  - I'm fine, and you?
+  - Fine, and you?
 - - Nice to meet you.
-  - Thank you. Nice to meet you too.
+  - Thank you.
 - - How do you do?
   - I'm doing well.
 - - How do you do?
   - I'm doing well. How are you?
 - - Hi, nice to meet you.
-  - Thank you. You too!
+  - Thank you. You too.
 - - It is a pleasure to meet you.
-  - Thank you. You too!
+  - Thank you. You too.
 - - Top of the morning to you!
   - Thank you kindly.
 - - Top of the morning to you!
   - And the rest of the day to you.
 - - What's up?
+  - Not much.
+- - What's up?
+  - Not too much.
+- - What's up?
   - Not much, how about you?
 - - What's up?
-  - Just chilling. You?
+  - Nothing much.
 - - What's up?
-<<<<<<< HEAD
-  - All good here!
-- - What's up?
-  - The sky's up!
-- - What's going on?
-  - Not much, what's going on with you?
-- - Good morning
-  - Good morning! How can I help you today?
-- - Good afternoon
-  - Good afternoon! How’s your day going?
-- - Good evening
-  - Good evening! Hope you had a good day.
-- - Hey there
-  - Hey! How can I help?
-- - Yo
-  - Yo! What’s up?
-- - Long time no see
-  - Yeah, it's been a while!
-- - How's everything?
-  - Everything’s great! What about you?
-- - How’s it going?
-  - All good here! How about you?
-- - Howdy
-  - Howdy partner!
-=======
   - The sky's up but I'm fine thanks. What about you?
 - - good
   - Awesome! Glad it worked for you
   - Great! Glad to hear that
-  - Glad that helped! 
-
->>>>>>> Akanksha_3rd
+  - Glad that helped!
