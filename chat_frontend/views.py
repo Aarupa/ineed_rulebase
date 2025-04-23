@@ -29,28 +29,28 @@ from django.conf import settings  # type: ignore
 from django.template.loader import get_template  # type: ignore
 
 # ChatterBot imports
-from chatterbot import ChatBot  # type: ignore
-from chatterbot.trainers import ChatterBotCorpusTrainer  # type: ignore
+# from chatterbot import ChatBot  # type: ignore
+# from chatterbot.trainers import ChatterBotCorpusTrainer  # type: ignore
 
 # -------------------- Constants and Configurations --------------------
 # File paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(script_dir, 'content.json')
 dialogue_history_path = os.path.join(script_dir, 'history.json')
-model_path = os.path.join(script_dir, 'db.sqlite3')
+# model_path = os.path.join(script_dir, 'db.sqlite3')
 
 # Initialize NLP and sentiment analysis tools
 nlp = spacy.load("en_core_web_sm")
 nltk.download('wordnet')
 sentiment_analyzer = SentimentIntensityAnalyzer()
-engine = pyttsx3.init()
+# engine = pyttsx3.init()
 
 # Initialize ChatterBot
-chatbot = ChatBot(
-    "MyBot",
-    storage_adapter="chatterbot.storage.SQLStorageAdapter",
-    database_uri=f"sqlite:///{model_path}"
-)
+# chatbot = ChatBot(
+#     "MyBot",
+#     storage_adapter="chatterbot.storage.SQLStorageAdapter",
+#     database_uri=f"sqlite:///{model_path}"
+# )
 
 # Load FAQ data
 with open(json_path, 'r') as json_data:
@@ -115,7 +115,9 @@ def preprocess_recognized_text(text):
 
 # -------------------- Chatbot Logic --------------------
 def classify_query(msg):
-    """Classify the query as company-related (FAQ) or general conversation."""
+    """
+    Classify the user query and return a category and response.
+    """
     msg_lower = msg.lower()
     # Handle "What is your name?" query
     if "what is your name" in msg_lower or "your name" in msg_lower:
@@ -146,8 +148,7 @@ def classify_query(msg):
             if best_match in faq['keywords']:
                 return "company", random.choice(faq['responses'])
 
-    response = chatbot.get_response(msg_lower)
-    return "general_convo", str(response) if response else None
+    return "unknown", "I'm sorry, I couldn't understand that."
 
 def generate_nlp_response(msg):
     """Generate a basic NLP response for general conversation."""
@@ -217,9 +218,9 @@ def handle_time_based_greeting(msg):
     if response:
         return response
 
-    # Fallback to ChatterBot response
-    response = chatbot.get_response(msg_lower)
-    return str(response) if response else "I'm sorry, I couldn't understand that."
+    # # Fallback to ChatterBot response
+    # response = chatbot.get_response(msg_lower)
+    # return str(response) if response else "I'm sorry, I couldn't understand that."
 
 def handle_date_related_queries(msg):
     """Handle date-related queries and provide an appropriate response."""
@@ -373,3 +374,19 @@ def listen():
                 print(f"An error occurred: {e}")
         else:
             print("Microphone is OFF. Press Enter to toggle it back on.")
+
+from django.http import JsonResponse
+from .train import query_ollama
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def ollama_chat(request):
+    """
+    Handle chat requests for the Ollama model.
+    """
+    if request.method == "POST":
+        data = json.loads(request.body)
+        prompt = data.get("prompt", "")
+        response = query_ollama(prompt)
+        return JsonResponse({"response": response})
+    return JsonResponse({"error": "Invalid request method."}, status=400)
