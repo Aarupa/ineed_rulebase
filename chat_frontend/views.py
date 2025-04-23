@@ -8,29 +8,26 @@ import logging
 from datetime import datetime, timedelta
 
 # Third-party imports
-import speech_recognition as sr  # type: ignore
-import pyttsx3  # type: ignore
-import spacy  # type: ignore
-import nltk  # type: ignore
-from nltk.corpus import wordnet  # type: ignore
-from textblob import TextBlob  # type: ignore
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer  # type: ignore
-from fuzzywuzzy import process  # type: ignore
-from pydub import AudioSegment
-from pydub.playback import play
-from gtts import gTTS
-import whisper  # Import Whisper
+from textblob import TextBlob  # Used in correct_spelling
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer  # Used in analyze_sentiment
+from fuzzywuzzy import process  # Used in get_best_match
+from pydub import AudioSegment  # Used in speak and listen
+from pydub.playback import play  # Used in speak
+from gtts import gTTS  # Used in speak
+import whisper  # Used in listen for transcribing audio
 
 # Django imports
-from django.http import JsonResponse, HttpRequest  # type: ignore
-from django.views.decorators.csrf import csrf_exempt  # type: ignore
-from django.shortcuts import render  # type: ignore
-from django.conf import settings  # type: ignore
-from django.template.loader import get_template  # type: ignore
+from django.http import JsonResponse, HttpRequest  # For views and simulated requests
+from django.views.decorators.csrf import csrf_exempt  # For CSRF exemption on views
+from django.shortcuts import render  # For rendering templates
 
 # ChatterBot imports
-from chatterbot import ChatBot  # type: ignore
-from chatterbot.trainers import ChatterBotCorpusTrainer  # type: ignore
+from chatterbot import ChatBot  # Used to initialize the chatbot
+
+# Conditionally used inside specific methods
+import spacy  # Used in generate_nlp_response
+import nltk  # Used to download 'wordnet'
+
 
 # -------------------- Constants and Configurations --------------------
 # File paths
@@ -43,7 +40,6 @@ model_path = os.path.join(script_dir, 'db.sqlite3')
 nlp = spacy.load("en_core_web_sm")
 nltk.download('wordnet')
 sentiment_analyzer = SentimentIntensityAnalyzer()
-engine = pyttsx3.init()
 
 # Initialize ChatterBot
 chatbot = ChatBot(
