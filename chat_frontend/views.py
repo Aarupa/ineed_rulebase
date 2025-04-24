@@ -6,27 +6,22 @@ import random
 import tempfile
 import logging
 from datetime import datetime, timedelta
+import spacy  # Import spacy for NLP
+import nltk  # Import nltk for downloading wordnet
 
 # Third-party imports
-import speech_recognition as sr  # type: ignore
-import pyttsx3  # type: ignore
-import spacy  # type: ignore
-import nltk  # type: ignore
-from nltk.corpus import wordnet  # type: ignore
-from textblob import TextBlob  # type: ignore
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer  # type: ignore
-from fuzzywuzzy import process  # type: ignore
-from pydub import AudioSegment
-from pydub.playback import play
-from gtts import gTTS
-import whisper  # Import Whisper
+from textblob import TextBlob  # Used in correct_spelling
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer  # Used in analyze_sentiment
+from fuzzywuzzy import process  # Used in get_best_match
+from pydub import AudioSegment  # Used in speak and listen
+from pydub.playback import play  # Used in speak
+from gtts import gTTS  # Used in speak
+import whisper  # Used in listen for transcribing audio
 
 # Django imports
-from django.http import JsonResponse, HttpRequest  # type: ignore
-from django.views.decorators.csrf import csrf_exempt  # type: ignore
-from django.shortcuts import render  # type: ignore
-from django.conf import settings  # type: ignore
-from django.template.loader import get_template  # type: ignore
+from django.http import JsonResponse, HttpRequest  # For views and simulated requests
+from django.views.decorators.csrf import csrf_exempt  # For CSRF exemption on views
+from django.shortcuts import render  # For rendering templates
 
 # ChatterBot imports
 # from chatterbot import ChatBot  # type: ignore
@@ -35,13 +30,13 @@ from django.template.loader import get_template  # type: ignore
 # -------------------- Constants and Configurations --------------------
 # File paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
-json_path = os.path.join(script_dir, 'content.json')
-dialogue_history_path = os.path.join(script_dir, 'history.json')
+json_path = os.path.join(script_dir, 'json_files', 'content.json')
+dialogue_history_path = os.path.join(script_dir, 'json_files', 'history.json')
 # model_path = os.path.join(script_dir, 'db.sqlite3')
 
 # Initialize NLP and sentiment analysis tools
 nlp = spacy.load("en_core_web_sm")
-nltk.download('wordnet')
+nltk.download('wordnet') 
 sentiment_analyzer = SentimentIntensityAnalyzer()
 # engine = pyttsx3.init()
 
@@ -66,11 +61,30 @@ if os.path.exists(dialogue_history_path):
         except json.JSONDecodeError:
             history = {}
 
+# Clear history.json for one-time use
+if os.path.exists(dialogue_history_path):
+    with open(dialogue_history_path, 'w', encoding='utf-8') as f:
+        json.dump({}, f, indent=4, ensure_ascii=False)
+
 # Load Whisper model
 whisper_model = whisper.load_model("tiny")
 
 # Add chatbot's name
 CHATBOT_NAME = "Infee"
+
+# Load additional JSON files
+greetings_path = os.path.join(script_dir, 'json_files', 'greetings.json')
+farewells_path = os.path.join(script_dir, 'json_files', 'farewells.json')
+general_path = os.path.join(script_dir, 'json_files', 'general.json')
+
+with open(greetings_path, 'r', encoding='utf-8') as f:  # Specify encoding
+    greetings_data = json.load(f)
+
+with open(farewells_path, 'r', encoding='utf-8') as f:  # Specify encoding
+    farewells_data = json.load(f)
+
+with open(general_path, 'r', encoding='utf-8') as f:  # Specify encoding
+    general_data = json.load(f)
 
 # -------------------- Utility Functions --------------------
 def save_conversation_to_file(user_message, response):
@@ -253,6 +267,18 @@ def handle_date_related_queries(msg):
     # Fallback for unrecognized queries
     return None
 
+def get_priority_response(preprocessed_input):
+    """
+    Check if the input matches greetings, farewells, or general responses.
+    """
+    if preprocessed_input in greetings_data["greetings"]["inputs"]:
+        return random.choice(greetings_data["greetings"]["responses"])
+    elif preprocessed_input in farewells_data["farewells"]["inputs"]:
+        return random.choice(farewells_data["farewells"]["responses"])
+    elif preprocessed_input in general_data["general_acknowledgments"]["inputs"]:
+        return random.choice(general_data["general_acknowledgments"]["responses"])
+    return None
+
 # -------------------- HTTP Request Handlers --------------------
 @csrf_exempt
 def get_response(request):
@@ -260,13 +286,16 @@ def get_response(request):
     global conversation_history
     if request.method == 'POST':
         data = json.loads(request.body)
-        user_message = data.get('prompt', '')
+        user_message = data.get('prompt', '').strip()
         if user_message:
-            # Handle date-related queries first
+            preprocessed_input = user_message.lower()
+
+            # Handle date-related queries
             date_related_response = handle_date_related_queries(user_message)
             if date_related_response:
                 conversation_history.append((user_message, date_related_response))
                 save_conversation_to_file(user_message, date_related_response)
+                speak(date_related_response)  # Ensure speaking text response
                 return JsonResponse({'text': date_related_response})
 
             # Handle time-based greetings
@@ -274,6 +303,7 @@ def get_response(request):
             if time_based_response:
                 conversation_history.append((user_message, time_based_response))
                 save_conversation_to_file(user_message, time_based_response)
+                speak(time_based_response)  # Ensure speaking text response
                 return JsonResponse({'text': time_based_response})
 
             # Handle contextual responses
@@ -281,6 +311,7 @@ def get_response(request):
             if contextual_response:
                 conversation_history.append((user_message, contextual_response))
                 save_conversation_to_file(user_message, contextual_response)
+                speak(contextual_response)  # Ensure speaking text response
                 return JsonResponse({'text': contextual_response})
 
             # Handle classified queries
@@ -288,20 +319,35 @@ def get_response(request):
             if response:
                 conversation_history.append((user_message, response))
                 save_conversation_to_file(user_message, response)
+                speak(response)  # Ensure speaking text response
                 return JsonResponse({'text': response})
+            
+            priority_response = get_priority_response(preprocessed_input)
+            if priority_response:
+                conversation_history.append((user_message, priority_response))
+                save_conversation_to_file(user_message, priority_response)
+                speak(priority_response)  # Ensure speaking text response
+                return JsonResponse({'text': priority_response})
 
-            # Fallback to NLP response
-            response = generate_nlp_response(user_message)
+            # Fallback to Ollama model if no other conditions are met
+            response = query_ollama(user_message)
+            conversation_history.append((user_message, response))
+            save_conversation_to_file(user_message, response)
+            speak(response)  # Ensure speaking text response
             return JsonResponse({'text': response})
+
     return JsonResponse({'text': 'Invalid request'}, status=400)
 
 @csrf_exempt
 def clear_history(request):
-    """Clear the conversation history."""
+    """Clear the conversation history and history.json file."""
     global conversation_history
     if request.method == 'POST':
         conversation_history.clear()
-        return JsonResponse({'status': 'success', 'message': 'Conversation history cleared.'})
+        # Clear history.json file
+        with open(dialogue_history_path, 'w', encoding='utf-8') as f:
+            json.dump({}, f, indent=4, ensure_ascii=False)
+        return JsonResponse({'status': 'success', 'message': 'Conversation history and history.json cleared.'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
 def chat(request):
@@ -382,11 +428,20 @@ from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
 def ollama_chat(request):
     """
-    Handle chat requests for the Ollama model.
+    Handle chat requests for the Ollama model, with a fallback to content.json.
     """
     if request.method == "POST":
         data = json.loads(request.body)
-        prompt = data.get("prompt", "")
+        prompt = data.get("prompt", "").strip()
+
+        # Check for a relevant response in content.json
+        for faq in faq_data['faqs']:
+            if prompt.lower() == faq['question'].lower():
+                response = random.choice(faq['responses'])
+                return JsonResponse({"response": response})
+
+        # If no match is found, query the Ollama model
         response = query_ollama(prompt)
         return JsonResponse({"response": response})
+
     return JsonResponse({"error": "Invalid request method."}, status=400)

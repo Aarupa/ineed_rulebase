@@ -289,6 +289,11 @@
             return null;
         }
 
+        function scrollToBottom() {
+            const chatWindow = document.getElementById('chat-window');
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
         function sendMessage() {
             const prompt = document.getElementById('prompt').value;
             const messages = document.getElementById('messages');
@@ -302,7 +307,8 @@
 
             document.getElementById('prompt').value = '';
 
-            axios.post('/api/ollama-chat/', { prompt: prompt }, {
+            // First call to /api/chat/
+            axios.post('/api/chat/', { prompt: prompt }, {
                 headers: {
                     'X-CSRFToken': getCSRFToken()
                 }
@@ -310,9 +316,35 @@
             .then(response => {
                 const botMessage = document.createElement('div');
                 botMessage.className = 'bot-message';
-                botMessage.textContent = response.data.response;
-                messages.appendChild(botMessage);
-                scrollToBottom();
+                const chatResponse = response.data.text;
+
+                if (chatResponse && chatResponse.trim() !== "I'm sorry, I couldn't understand that.") {
+                    botMessage.textContent = chatResponse;
+                    messages.appendChild(botMessage);
+                    scrollToBottom();
+                } else {
+                    // Fallback to /api/ollama-chat/ if no valid response
+                    axios.post('/api/ollama-chat/', { prompt: prompt }, {
+                        headers: {
+                            'X-CSRFToken': getCSRFToken()
+                        }
+                    })
+                    .then(ollamaResponse => {
+                        const ollamaBotMessage = document.createElement('div');
+                        ollamaBotMessage.className = 'bot-message';
+                        ollamaBotMessage.textContent = ollamaResponse.data.response;
+                        messages.appendChild(ollamaBotMessage);
+                        scrollToBottom();
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        const errorMessage = document.createElement('div');
+                        errorMessage.className = 'bot-message';
+                        errorMessage.textContent = "Something went wrong. Please try again.";
+                        messages.appendChild(errorMessage);
+                        scrollToBottom();
+                    });
+                }
             })
             .catch(error => {
                 console.error(error);
@@ -503,14 +535,18 @@
                         return;
                     }
 
-                    axios.post('/api/chat/', { prompt: transcript, job: "general" })
+                    axios.post('/api/ollama-chat/', { prompt: transcript }, {
+                        headers: {
+                            'X-CSRFToken': getCSRFToken()
+                        }
+                    })
                         .then(response => {
                             const botMessage = document.createElement('div');
                             botMessage.className = 'bot-message';
-                            botMessage.textContent = response.data.text;
+                            botMessage.textContent = response.data.response;
                             messages.appendChild(botMessage);
 
-                            speakResponse(response.data.text);
+                            speakResponse(response.data.response);
                         })
                         .catch(error => {
                             console.error(error);
@@ -571,12 +607,6 @@
         window.onload = function() {
             startVoiceRecognition();
         };
-    </script>
-    <script>
-        function scrollToBottom() {
-            const chatWindow = document.getElementById('chat-window');
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
     </script>
 </body>
 
