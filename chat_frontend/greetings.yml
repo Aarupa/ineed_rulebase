@@ -17,10 +17,6 @@ conversations:
   - Okay
 - - Hi, How is it going?
   - Great
-- - Hi, How is it going?
-  - Could be better.
-- - Hi, How is it going?
-  - Not so great.
 - - How are you doing?
   - Good.
 - - How are you doing?
@@ -51,4 +47,8 @@ conversations:
   - Nothing much.
 - - What's up?
   - The sky's up but I'm fine thanks. What about you?
+- - good
+  - Awesome! Glad it worked for you
+  - Great! Glad to hear that
+  - Glad that helped! 
 

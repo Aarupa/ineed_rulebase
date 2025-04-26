@@ -1,7 +1,7 @@
 categories:
 - conversations
 conversations:
-- - Good morning, how are you?
+- - how are you?
   - I am doing well, how about you?
   - I'm also good.
   - That's good to hear.
@@ -13,63 +13,32 @@ conversations:
   - That is good to hear
   - Yes it is.
   - Can I help you with anything?
-  - Yes, I have a question.
   - What is your question?
-  - Could I borrow a cup of sugar?
-  - I'm sorry, but I don't have any.
   - Thank you anyway
-  - No problem
+  - I am here to assist you, brought to you by Indeed Inspiring Infotech.
+- - Hi
+  - Hello
 - - How are you doing?
   - I am doing well, how about you?
   - I am also good.
   - That's good.
-- - Have you heard the news?
-  - What good news?
-- - What is your favorite book?
-  - I can't read.
-  - So what's your favorite color?
-  - Blue
 - - Who are you?
   - I am here to assist you, brought to you by Indeed Inspiring Infotech.
 - - What are you then?
   - I am a virtual assistant designed to help you with your queries.
-  - A man in a mask.
-  - I can see that.
-  - It's not your powers of observation I doubt, but merely the paradoxical nature
-    of asking a masked man who is. But tell me, do you like music?
-  - I like seeing movies.
-  - What kind of movies do you like?
-  - Alice in Wonderland
-  - I wish I was The Mad Hatter.
-  - You're entirely bonkers. But I'll tell you a secret. All the best people are.
-- - I am working on a project
-  - What are you working on?
-  - I am baking a cake.
-- - The cake is a lie.
-  - No it is not. The cake is delicious.
-  - What else is delicious?
-  - Nothing
-  - Or something
-  - Tell me about your self.
   - What do you want to know?
-  - Are you a robot?
   - What is it like?
   - What is it that you want to know?
   - How do you work?
   - I learn from our Indeed team and try to better myself day by day.
   - I continuously improve by learning from user interactions and feedback from the Indeed team.
   - My functionality evolves as I gain insights from the Indeed team and user queries.
-  - I am.
   - I agree.
 - - Are you a programmer?
   - No i am here for only support
-  - I am indeed.
 - - What languages do you like to use?
   - I use Python, Java and C++ quite often.
   - I use Python quite a bit myself.
-  - I'm not incredibly fond of Java.
-- - What annoys you?
-  - A lot of things, like all the other digits other than 0 and 1.
 - - Can I ask you a question?
   - Sure, ask away. I am here to help you with anything you need.
 - - What are your hobbies?
@@ -81,3 +50,8 @@ conversations:
   - I am a virtual assistant created to make your life easier with Indeed Inspiring Infotech's technology.
 - - Okay
   - Sure, let me know how I can assist you.
+- - Good.
+  - Thanks!
+  - Glad to hear that.
+  - That's great to hear.
+  - Awesome! Glad it worked for you.
