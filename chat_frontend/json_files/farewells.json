@@ -1,0 +1,18 @@
+{
+    "farewells": {
+      "inputs": [
+        "bye", "goodbye", "see you", "see ya", "see you later", "take care",
+        "catch you later", "talk to you later", "peace out", "farewell",
+        "bbye", "bye bye", "cya", "later", "adios", "good night", "gn"
+      ],
+      "responses": [
+        "Goodbye! 👋",
+        "See you later!",
+        "Take care!",
+        "Talk to you soon!",
+        "Bye for now!",
+        "Catch you later!"
+      ]
+    }
+  }
+  

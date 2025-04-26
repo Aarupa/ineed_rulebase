@@ -1,0 +1,18 @@
+{
+    "greetings": {
+      "inputs": [
+        "hi", "hello", "hey", "heyy", "heyyy", "yo", "hola", "hi there", "hello there",
+        "hey there", "good morning", "good afternoon", "good evening", "greetings",
+        "sup", "what's up", "whats up", "wassup", "howdy", "hii", "helloo", "hellooo"
+      ],
+      "responses": [
+        "Hey! 😊",
+        "Hello! How can I help you today?",
+        "Hi there! 👋",
+        "Greetings! How may I assist?",
+        "Hey! What can I do for you?",
+        "Hello! Ready to chat!"
+      ]
+    }
+  }
+  
