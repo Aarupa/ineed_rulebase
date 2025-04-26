@@ -338,6 +338,7 @@ let recognition;
                 headers: {
                     'X-CSRFToken': getCSRFToken()
                 }
+                
             })
             .then(response => {
                 const botMessage = document.createElement('div');
@@ -538,67 +539,25 @@ let recognition;
                         return;
                     }
 
-            //         axios.post('/api/ollama-chat/', { prompt: transcript }, {
-            //             headers: {
-            //                 'X-CSRFToken': getCSRFToken()
-            //             }
-            //         })
-            //             .then(response => {
-            //                 const botMessage = document.createElement('div');
-            //                 botMessage.className = 'bot-message';
-            //                 botMessage.textContent = response.data.response;
-            //                 messages.appendChild(botMessage);
-
-            //                 speakResponse(response.data.response);
-            //             })
-            //             .catch(error => {
-            //                 console.error(error);
-            //                 const botMessage = document.createElement('div');
-            //                 botMessage.className = 'bot-message';
-            //                 botMessage.textContent = "Something went wrong. Please try again.";
-            //                 messages.appendChild(botMessage);
-            //             });
-            //     }
-            // };
-
-            axios.post('/api/chat/', { prompt: transcript }, {
-                headers: {
-                    'X-CSRFToken': getCSRFToken()
-                }
-                })
-                .then(response => {
-                    // Check if the response is valid or empty
-                    const reply = response.data.response;
-                    if (reply && reply.trim() !== "") {
-                        const botMessage = document.createElement('div');
-                        botMessage.className = 'bot-message';
-                        botMessage.textContent = reply;
-                        messages.appendChild(botMessage);
-                        speakResponse(reply);
-                    } else {
-                        // If no valid response, fallback to Ollama
-                        callOllamaAPI(transcript);
-                    }
-                })
-                .catch(error => {
-                    console.warn("Primary chat API failed, trying Ollama...", error);
-                    // If primary API fails, fallback to Ollama
-                    callOllamaAPI(transcript);
-                });
-            }
-
-                function callOllamaAPI(prompt) {
-                    axios.post('/api/ollama-chat/', { prompt: prompt }, {
+                    axios.post('/api/chat/', { prompt: transcript }, {
                         headers: {
                             'X-CSRFToken': getCSRFToken()
                         }
                     })
                     .then(response => {
-                        const botMessage = document.createElement('div');
-                        botMessage.className = 'bot-message';
-                        botMessage.textContent = response.data.response;
-                        messages.appendChild(botMessage);
-                        speakResponse(response.data.response);
+                        const reply = response.data.response;
+                        if (reply && reply.trim() !== "") {
+                            const botMessage = document.createElement('div');
+                            botMessage.className = 'bot-message';
+                            botMessage.textContent = reply;
+                            messages.appendChild(botMessage);
+                            speakResponse(reply); // Ensure the response is spoken
+                        } else {
+                            const botMessage = document.createElement('div');
+                            botMessage.className = 'bot-message';
+                            botMessage.textContent = "I'm sorry, I couldn't understand that.";
+                            messages.appendChild(botMessage);
+                        }
                     })
                     .catch(error => {
                         console.error(error);
@@ -607,8 +566,8 @@ let recognition;
                         botMessage.textContent = "Something went wrong. Please try again.";
                         messages.appendChild(botMessage);
                     });
-                };
-            }
+                }
+            };
 
             recognition.onerror = function (event) {
                 console.error('Speech recognition error:', event.error);

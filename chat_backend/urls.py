@@ -20,6 +20,5 @@ from django.contrib import admin
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include("chat_frontend.urls")),  # This line maps the root URL to the chat view
-    path("api/chat/", include("chat_frontend.urls")),  # This line includes the chatbot API
+    path("", include("chat_frontend.urls")),
 ]

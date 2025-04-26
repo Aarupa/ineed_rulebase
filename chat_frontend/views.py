@@ -329,13 +329,7 @@ def get_response(request):
                 speak(priority_response)  # Ensure speaking text response
                 return JsonResponse({'text': priority_response})
 
-            # Fallback to Ollama model if no other conditions are met
-            response = query_ollama(user_message)
-            conversation_history.append((user_message, response))
-            save_conversation_to_file(user_message, response)
-            speak(response)  # Ensure speaking text response
-            return JsonResponse({'text': response})
-
+            return JsonResponse({'text': "I'm sorry, I couldn't understand that."})
     return JsonResponse({'text': 'Invalid request'}, status=400)
 
 @csrf_exempt
@@ -420,28 +414,3 @@ def listen():
                 print(f"An error occurred: {e}")
         else:
             print("Microphone is OFF. Press Enter to toggle it back on.")
-
-from django.http import JsonResponse
-from .train import query_ollama
-from django.views.decorators.csrf import csrf_exempt
-
-@csrf_exempt
-def ollama_chat(request):
-    """
-    Handle chat requests for the Ollama model, with a fallback to content.json.
-    """
-    if request.method == "POST":
-        data = json.loads(request.body)
-        prompt = data.get("prompt", "").strip()
-
-        # Check for a relevant response in content.json
-        for faq in faq_data['faqs']:
-            if prompt.lower() == faq['question'].lower():
-                response = random.choice(faq['responses'])
-                return JsonResponse({"response": response})
-
-        # If no match is found, query the Ollama model
-        response = query_ollama(prompt)
-        return JsonResponse({"response": response})
-
-    return JsonResponse({"error": "Invalid request method."}, status=400)
