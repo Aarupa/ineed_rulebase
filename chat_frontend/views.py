@@ -6,6 +6,7 @@ import random
 import tempfile
 import logging
 from datetime import datetime, timedelta
+import string  # Add this import for punctuation removal
 
 # Third-party imports
 from textblob import TextBlob  # Used in correct_spelling
@@ -22,7 +23,7 @@ from django.views.decorators.csrf import csrf_exempt  # For CSRF exemption on vi
 from django.shortcuts import render  # For rendering templates
 
 # ChatterBot imports
-from chatterbot import ChatBot  # Used to initialize the chatbot
+# from chatterbot import ChatBot  # Used to initialize the chatbot
 
 # Conditionally used inside specific methods
 import spacy  # Used in generate_nlp_response
@@ -32,21 +33,20 @@ import nltk  # Used to download 'wordnet'
 # -------------------- Constants and Configurations --------------------
 # File paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
-json_path = os.path.join(script_dir, 'content.json')
-dialogue_history_path = os.path.join(script_dir, 'history.json')
-model_path = os.path.join(script_dir, 'db.sqlite3')
+json_path = os.path.join(script_dir, 'json_files', 'content.json')
+dialogue_history_path = os.path.join(script_dir, 'json_files', 'history.json')
 
 # Initialize NLP and sentiment analysis tools
 nlp = spacy.load("en_core_web_sm")
 nltk.download('wordnet')
 sentiment_analyzer = SentimentIntensityAnalyzer()
 
-# Initialize ChatterBot
-chatbot = ChatBot(
-    "MyBot",
-    storage_adapter="chatterbot.storage.SQLStorageAdapter",
-    database_uri=f"sqlite:///{model_path}"
-)
+# # Initialize ChatterBot
+# chatbot = ChatBot(
+#     "MyBot",
+#     storage_adapter="chatterbot.storage.SQLStorageAdapter",
+#     database_uri=f"sqlite:///{model_path}"
+# )
 
 # Load FAQ data
 with open(json_path, 'r') as json_data:
@@ -62,11 +62,32 @@ if os.path.exists(dialogue_history_path):
         except json.JSONDecodeError:
             history = {}
 
+# Clear history.json for one-time use
+if os.path.exists(dialogue_history_path):
+    with open(dialogue_history_path, 'w', encoding='utf-8') as f:
+        json.dump({}, f, indent=4, ensure_ascii=False)
+
+
+
 # Load Whisper model
 whisper_model = whisper.load_model("tiny")
 
 # Add chatbot's name
 CHATBOT_NAME = "Infee"
+
+# Load additional JSON files
+greetings_path = os.path.join(script_dir, 'json_files', 'greetings.json')
+farewells_path = os.path.join(script_dir, 'json_files', 'farewells.json')
+general_path = os.path.join(script_dir, 'json_files', 'general.json')
+
+with open(greetings_path, 'r', encoding='utf-8') as f:  # Specify encoding
+    greetings_data = json.load(f)
+
+with open(farewells_path, 'r', encoding='utf-8') as f:  # Specify encoding
+    farewells_data = json.load(f)
+
+with open(general_path, 'r', encoding='utf-8') as f:  # Specify encoding
+    general_data = json.load(f)
 
 # -------------------- Utility Functions --------------------
 def save_conversation_to_file(user_message, response):
@@ -142,8 +163,8 @@ def classify_query(msg):
             if best_match in faq['keywords']:
                 return "company", random.choice(faq['responses'])
 
-    response = chatbot.get_response(msg_lower)
-    return "general_convo", str(response) if response else None
+    # If no match is found, return a default response
+    return "unknown", "I'm sorry, I couldn't understand that."
 
 def generate_nlp_response(msg):
     """Generate a basic NLP response for general conversation."""
@@ -214,8 +235,8 @@ def handle_time_based_greeting(msg):
         return response
 
     # Fallback to ChatterBot response
-    response = chatbot.get_response(msg_lower)
-    return str(response) if response else "I'm sorry, I couldn't understand that."
+    # response = chatbot.get_response(msg_lower)
+    # return str(response) if response else "I'm sorry, I couldn't understand that."
 
 def handle_date_related_queries(msg):
     """Handle date-related queries and provide an appropriate response."""
@@ -248,6 +269,20 @@ def handle_date_related_queries(msg):
     # Fallback for unrecognized queries
     return None
 
+def get_priority_response(preprocessed_input):
+    """
+    Check if the input matches greetings, farewells, or general responses.
+    """
+    # Normalize input by removing punctuation and converting to lowercase
+    normalized_input = preprocessed_input.translate(str.maketrans('', '', string.punctuation)).lower()
+    for category, data in [("greetings", greetings_data["greetings"]),
+                           ("farewells", farewells_data["farewells"]),
+                           ("general_acknowledgments", general_data["general_acknowledgments"])]:
+        if normalized_input in map(str.lower, data["inputs"]):  # Case-insensitive matching
+            logging.debug(f"Matched {category} for input: {normalized_input}")
+            return random.choice(data["responses"])
+    logging.debug(f"No match found in priority responses for input: {normalized_input}")
+    return None
 # -------------------- HTTP Request Handlers --------------------
 @csrf_exempt
 def get_response(request):
@@ -256,38 +291,54 @@ def get_response(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         user_message = data.get('prompt', '')
+        logging.debug(f"User message: {user_message}")  # Log the user message
         if user_message:
+            # Preprocess the user message
+            preprocessed_message = user_message.strip().lower()
+            logging.debug(f"Preprocessed message: {preprocessed_message}")  # Log the preprocessed message
+
+            # Check priority responses (greetings, farewells, general)
+            priority_response = get_priority_response(preprocessed_message)
+            if priority_response:
+                logging.debug(f"Response from priority_response: {priority_response}")  # Log the response
+                conversation_history.append((user_message, priority_response))
+                save_conversation_to_file(user_message, priority_response)
+                return JsonResponse({'text': priority_response})
+
             # Handle date-related queries first
-            date_related_response = handle_date_related_queries(user_message)
+            date_related_response = handle_date_related_queries(preprocessed_message)
             if date_related_response:
                 conversation_history.append((user_message, date_related_response))
                 save_conversation_to_file(user_message, date_related_response)
                 return JsonResponse({'text': date_related_response})
 
             # Handle time-based greetings
-            time_based_response = handle_time_based_greeting(user_message)
+            time_based_response = handle_time_based_greeting(preprocessed_message)
             if time_based_response:
                 conversation_history.append((user_message, time_based_response))
                 save_conversation_to_file(user_message, time_based_response)
                 return JsonResponse({'text': time_based_response})
 
             # Handle contextual responses
-            contextual_response = get_contextual_response(user_message)
+            contextual_response = get_contextual_response(preprocessed_message)
             if contextual_response:
                 conversation_history.append((user_message, contextual_response))
                 save_conversation_to_file(user_message, contextual_response)
                 return JsonResponse({'text': contextual_response})
 
             # Handle classified queries
-            category, response = classify_query(user_message)
+            category, response = classify_query(preprocessed_message)
             if response:
                 conversation_history.append((user_message, response))
                 save_conversation_to_file(user_message, response)
                 return JsonResponse({'text': response})
 
-            # Fallback to NLP response
-            response = generate_nlp_response(user_message)
-            return JsonResponse({'text': response})
+            # Fallback response if no match is found
+            fallback_message = "I'm sorry, I couldn't understand that. I'm still learning and will try to improve in the future."
+            logging.debug(f"Fallback response triggered for input: {preprocessed_message}")
+            conversation_history.append((user_message, fallback_message))
+            save_conversation_to_file(user_message, fallback_message)
+            return JsonResponse({'text': fallback_message})
     return JsonResponse({'text': 'Invalid request'}, status=400)
 
 @csrf_exempt
