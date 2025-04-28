@@ -2,8 +2,8 @@
     "greetings": {
       "inputs": [
         "hi", "hello", "hey", "heyy", "heyyy", "yo", "hola", "hi there", "hello there", "hey there",
-        "good morning", "good afternoon", "good evening", "good day", "greetings",
-        "howdy", "g'day", "aloha", "namaste", "peace",
+         "good day", "greetings",
+        "howdy", "g'day", "aloha", "namaste", "peace","good","okay good","ok good" ,
         "what's up", "whats up", "wassup", "sup", "what's good", "what's new", "what's happening",
         "how's it going", "how are you", "how are you doing", "how do you do",
         "how have you been", "how's life", "how's everything", "how's your day going",
@@ -20,8 +20,7 @@
         "Hi there! Hope you're doing great!",
         "Hello! How are you today?",
         "Hey hey! What's up?",
-        "Good morning! How can I help you?",
-        "Good evening! Everything alright?",
+        
         "Hello there! How’s everything going?",
         "Yo! What's popping?",
         "Howdy! What’s new with you?",
@@ -47,8 +46,7 @@
         "Yo fam! Always a pleasure to chat!",
         "Hi, how’s your vibe today?",
         "Hey hey! Hope today’s been kind to you.",
-        "Morning! Ready to crush it today?",
-        "Good afternoon! How’s everything going?",
+
         "Evening! Hope you had a great day!",
         "Hey legend! How’s the energy today?"
       ]

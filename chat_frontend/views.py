@@ -6,7 +6,7 @@ import random
 import tempfile
 import logging
 from datetime import datetime, timedelta
-import string  # Add this import for punctuation removal
+import string  # Ensure this import is present at the top of the file
 
 # Third-party imports
 from textblob import TextBlob  # Used in correct_spelling
@@ -73,7 +73,7 @@ if os.path.exists(dialogue_history_path):
 whisper_model = whisper.load_model("tiny")
 
 # Add chatbot's name
-CHATBOT_NAME = "Infee"
+CHATBOT_NAME = "Infi"
 
 # Load additional JSON files
 greetings_path = os.path.join(script_dir, 'json_files', 'greetings.json')
@@ -133,25 +133,27 @@ def preprocess_recognized_text(text):
 # -------------------- Chatbot Logic --------------------
 def classify_query(msg):
     """Classify the query as company-related (FAQ) or general conversation."""
-    msg_lower = msg.lower()
+    # Normalize the message by removing punctuation and converting to lowercase
+    msg_normalized = msg.translate(str.maketrans('', '', string.punctuation)).lower()
+
     # Handle "What is your name?" query
-    if "what is your name" in msg_lower or "your name" in msg_lower:
+    if "what is your name" in msg_normalized or "your name" in msg_normalized:
         return "general_convo", f"My name is {CHATBOT_NAME}."
 
     greetings = [f"hey {CHATBOT_NAME.lower()}", f"hi {CHATBOT_NAME.lower()}","hi ","Hi ","hi  ","Hi  ","hello ","Hello ","hey ","Hey ","hii ","Hii ","hii  ","Hii  "]
 
-    if any(greeting in msg_lower for greeting in greetings):
+    if any(greeting in msg_normalized for greeting in greetings):
         return "greeting", f"Hello! I'm {CHATBOT_NAME}. How can I assist you today?"
 
     for faq in faq_data['faqs']:
-        if msg_lower == faq['question'].lower():
+        if msg_normalized == faq['question'].translate(str.maketrans('', '', string.punctuation)).lower():
             return "company", random.choice(faq['responses'])
 
-    keywords = [keyword for faq in faq_data['faqs'] for keyword in faq['keywords']]
-    best_match = get_best_match(msg_lower, keywords)
+    keywords = [keyword.translate(str.maketrans('', '', string.punctuation)).lower() for faq in faq_data['faqs'] for keyword in faq['keywords']]
+    best_match = get_best_match(msg_normalized, keywords)
 
-    corrected_msg = correct_spelling(msg_lower)
-    if corrected_msg != msg_lower:
+    corrected_msg = correct_spelling(msg_normalized)
+    if corrected_msg != msg_normalized:
         for faq in faq_data['faqs']:
             if best_match in faq['keywords']:
                 suggested_question = faq['question']
@@ -277,7 +279,7 @@ def get_priority_response(preprocessed_input):
     normalized_input = preprocessed_input.translate(str.maketrans('', '', string.punctuation)).lower()
     for category, data in [("greetings", greetings_data["greetings"]),
                            ("farewells", farewells_data["farewells"]),
-                           ("general_acknowledgments", general_data["general_acknowledgments"])]:
+                           ("general", general_data["general"])]:
         if normalized_input in map(str.lower, data["inputs"]):  # Case-insensitive matching
             logging.debug(f"Matched {category} for input: {normalized_input}")
             return random.choice(data["responses"])
