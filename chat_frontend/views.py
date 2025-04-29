@@ -275,11 +275,11 @@ def get_priority_response(preprocessed_input):
     logging.debug(f"No match found in priority responses for input: {normalized_input}")
     return None
 
-# -------------------- OpenRouter Configuration --------------------
-# ✅ Use OpenRouter model
+# ----------------------------------------
+
 model = "mistralai/mistral-7b-instruct"
 
-API_KEY = "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"
+API_KEY = "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"
 
 def get_response_openrouter(prompt):
     """Send request to OpenRouter with restrictions to general conversations only"""
@@ -349,7 +349,8 @@ def is_general_conversation(text):
         "pleased to meet you", "it's a pleasure", "how can I help you", "how can I assist you", "what can I do for you",
         "long time no see", "it's been a while", "what's going on", "what's the matter", "how have you been",
         "what's your favorite", "tell me more", "can you help me", "I need assistance", "thank you so much",
-        "much appreciated", "you're the best", "no worries", "don't mention it", "anytime"
+        "much appreciated", "you're the best", "no worries", "don't mention it", "anytime","I am good", "I am fine",
+        "I am okay", "I am doing well", "I am alright", "I am doing fine", "I am doing great", "I am doing good",
     ]
 
     # Combine all phrases into a single list for matching
