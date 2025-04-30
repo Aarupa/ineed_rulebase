@@ -11,7 +11,7 @@
     "What is your name?": "My name is Infee.",
     "hii": "hii",
     "hii infi": "Hello! I'm Infee. How can I assist you today?",
-    "What is Indeed Inspiring Infotech?": "Indeed Inspiring provides IT training and corporate solutions to help businesses and individuals grow.",
+    "What is Indeed Inspiring Infotech?": "Indeed Inspiring Infotech is a tech-driven company specializing in IT solutions and training.",
     "exit ": "Thank you kindly.",
     "hello ": "hello.",
     "hi": "Dr. Sachin Saxena is a Senior Data Analyst at Teleperformance, Portugal, with expertise in machine learning and data science. He will conduct a session on 'From Learning to Earning: Azure Data Engineering Career Guide' on 2 April from 11 am to 12 pm.",
@@ -52,5 +52,9 @@
     "Eyes so you mean.": "I am an AI assistant built to support you with information and services.",
     "Okay, thank you.": "okay then what is article",
     "What can you do?": "I am an AI assistant built to support you with information and services.",
-    "Okay.": "Sure, let me know how I can assist you."
+    "Okay.": "Sure, let me know how I can assist you.",
+    "who is salman khan": "Sorry, the Mistral model is currently unavailable.",
+    "What is the mission of Indeed Inspiring Infotech?": "The mission is to empower individuals and organizations with industry-relevant skills and training to enhance their professional growth.",
+    "mission of indeed inspiring infotech": "Our vision is to create a highly skilled workforce through innovative learning solutions.",
+    "good morning": "It's already afternoon, but good day to you!"
 }

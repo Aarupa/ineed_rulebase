@@ -8,8 +8,6 @@ import logging
 from datetime import datetime, timedelta
 
 # Third-party imports
-#import speech_recognition as sr  # type: ignore
-#import pyttsx3  # type: ignore
 import spacy  # type: ignore
 import nltk  # type: ignore
 from nltk.corpus import wordnet  # type: ignore
@@ -29,13 +27,21 @@ from django.conf import settings  # type: ignore
 from django.template.loader import get_template  # type: ignore
 from django.utils.cache import add_never_cache_headers
 
-# ChatterBot imports
-from chatterbot import ChatBot  # type: ignore
-from chatterbot.trainers import ChatterBotCorpusTrainer  # type: ignore
+from chat_frontend.main import get_response
+
 
 # -------------------- Constants and Configurations --------------------
 # File paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Initialize ChatterBot chatbot
+# from chatterbot import ChatBot
+# from chatterbot.trainers import ChatterBotCorpusTrainer
+
+# chatbot = ChatBot("Infee")
+# trainer = ChatterBotCorpusTrainer(chatbot)
+# trainer.train("chatterbot.corpus.english")
+
 json_path = os.path.join(script_dir, 'content.json')
 dialogue_history_path = os.path.join(script_dir, 'history.json')
 model_path = os.path.join(script_dir, 'db.sqlite3')
@@ -47,12 +53,7 @@ sentiment_analyzer = SentimentIntensityAnalyzer()
 
 
 
-# Initialize ChatterBot
-chatbot = ChatBot(
-    "MyBot",
-    storage_adapter="chatterbot.storage.SQLStorageAdapter",
-    database_uri=f"sqlite:///{model_path}"
-)
+
 
 # Load FAQ data
 with open(json_path, 'r') as json_data:
@@ -148,8 +149,8 @@ def classify_query(msg):
             if best_match in faq['keywords']:
                 return "company", random.choice(faq['responses'])
 
-    response = chatbot.get_response(msg_lower)
-    return "general_convo", str(response) if response else None
+    # response = chatbot.get_response(msg_lower)
+    # return "general_convo", str(response) if response else None
 
 
 def generate_nlp_response(msg):
@@ -220,9 +221,9 @@ def handle_time_based_greeting(msg):
     if response:
         return response
 
-    # Fallback to ChatterBot response
-    response = chatbot.get_response(msg_lower)
-    return str(response) if response else "I'm sorry, I couldn't understand that."
+    # # Fallback to ChatterBot response
+    # response = chatbot.get_response(msg_lower)
+    # return str(response) if response else "I'm sorry, I couldn't understand that."
 
 def handle_date_related_queries(msg):
     """Handle date-related queries and provide an appropriate response."""
@@ -254,10 +255,19 @@ def handle_date_related_queries(msg):
     
     # Fallback for unrecognized queries
     return None
-
+from chat_frontend.lm import query_neural_chat 
 # -------------------- HTTP Request Handlers --------------------
+'''
 @csrf_exempt
 def get_response(request):
+    global conversation_history
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_message = data.get('prompt', '').strip()
+    re=query_neural_chat(user_message)
+    return JsonResponse({'text':re })
+
+  
     """Handle HTTP requests and return chatbot responses as JSON."""
     global conversation_history
     if request.method == 'POST':
@@ -304,7 +314,7 @@ def get_response(request):
             save_conversation_to_file(user_message, response)
             return JsonResponse({'text': response})
     return JsonResponse({'text': 'Invalid request'}, status=400)
-
+    '''
 @csrf_exempt
 def clear_history(request):
     """Clear the conversation history."""
