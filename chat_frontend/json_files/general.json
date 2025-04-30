@@ -8,7 +8,9 @@
         "definitely", "of course", "right", "ya", "yeah", "yep", "yup", "uh-huh", "for sure",
         "correct", "very true", "true that", "agreed", 
         "right away", "all good", "all clear", "works for me", "makes total sense",
-        "that's correct", "yes correct", "yeah correct", "okay done", "ok done"
+        "that's correct", "yes correct", "yeah correct", "okay done", "ok done", "thanks",
+        "thank you", "thank you very much", "thanks a lot", "thanks a ton", "thank you so much","yes",
+        "yes please", "yes indeed", "yes of course", "yes sure", "yes absolutely"
       ],
       "responses": [
         "Alright!",

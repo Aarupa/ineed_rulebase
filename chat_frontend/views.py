@@ -132,13 +132,11 @@ def preprocess_recognized_text(text):
 
 # -------------------- Chatbot Logic --------------------
 def classify_query(msg):
-    """Classify the query as company-related (FAQ) or general conversation."""
-    # Normalize the message by removing punctuation and converting to lowercase
     msg_normalized = msg.translate(str.maketrans('', '', string.punctuation)).lower()
 
-    # Handle "What is your name?" query
-    if "what is your name" in msg_normalized or "your name" in msg_normalized:
-        return "general_convo", f"My name is {CHATBOT_NAME}."
+    # Handle direct name queries
+    if any(q in msg_normalized for q in ["what is your name", "who are you", "your name"]):
+        return "general_convo", f"My name is {CHATBOT_NAME}! How can I help?"
 
     greetings = [f"hey {CHATBOT_NAME.lower()}", f"hi {CHATBOT_NAME.lower()}","hi ","Hi ","hi  ","Hi  ","hello ","Hello ","hey ","Hey ","hii ","Hii ","hii  ","Hii  "]
 
@@ -166,7 +164,7 @@ def classify_query(msg):
                 return "company", random.choice(faq['responses'])
 
     # If no match is found, return a default response
-    return "unknown", "I'm sorry, I couldn't understand that."
+    return "unknown", "I’m still learning! Could you try asking in a different way?"
 
 def generate_nlp_response(msg):
     """Generate a basic NLP response for general conversation."""
@@ -273,17 +271,25 @@ def handle_date_related_queries(msg):
 
 def get_priority_response(preprocessed_input):
     """
-    Check if the input matches greetings, farewells, or general responses.
+    Check for name corrections, greetings, farewells, or general responses.
     """
-    # Normalize input by removing punctuation and converting to lowercase
     normalized_input = preprocessed_input.translate(str.maketrans('', '', string.punctuation)).lower()
+
+    # 1. First, check for name corrections (e.g., "Alexa" -> "I'm Infi")
+    if "name_correction" in greetings_data:
+        for wrong_name in greetings_data["name_correction"]["inputs"]:
+            if wrong_name in normalized_input:
+                logging.debug(f"User called the bot by another name: {wrong_name}")
+                return random.choice(greetings_data["name_correction"]["responses"])
+
+    # 2. Check greetings/farewells/general (existing logic)
     for category, data in [("greetings", greetings_data["greetings"]),
                            ("farewells", farewells_data["farewells"]),
                            ("general", general_data["general"])]:
-        if normalized_input in map(str.lower, data["inputs"]):  # Case-insensitive matching
+        if normalized_input in map(str.lower, data["inputs"]):
             logging.debug(f"Matched {category} for input: {normalized_input}")
             return random.choice(data["responses"])
-    logging.debug(f"No match found in priority responses for input: {normalized_input}")
+
     return None
 # -------------------- HTTP Request Handlers --------------------
 @csrf_exempt
@@ -336,7 +342,7 @@ def get_response(request):
                 return JsonResponse({'text': response})
 
             # Fallback response if no match is found
-            fallback_message = "I'm sorry, I couldn't understand that. I'm still learning and will try to improve in the future."
+            fallback_message = "I'm sorry, I couldn't understand that. I'm still learning and tring to improve myself"
             logging.debug(f"Fallback response triggered for input: {preprocessed_message}")
             conversation_history.append((user_message, fallback_message))
             save_conversation_to_file(user_message, fallback_message)
