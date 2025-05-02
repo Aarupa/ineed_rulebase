@@ -26,6 +26,8 @@ from django.shortcuts import render  # For rendering templates
 import spacy  # Used in generate_nlp_response
 import nltk  # Used to download 'wordnet'
 
+import google.generativeai as genai
+
 
 # -------------------- Constants and Configurations --------------------
 # File paths
@@ -168,7 +170,7 @@ def generate_nlp_response(msg):
     elif "how are you" in msg.lower():
         return random.choice(["I'm doing great, thanks for asking! How about you?", "I'm good! Hope you're having a great day too."])
     elif msg.lower() in ["great", "good", "awesome", "fantastic", "amazing"]:
-        return random.choice(["Glad to hear that! 😊 What’s on your mind?", "That's awesome! How can I assist you today?"])
+        return random.choice(["Glad to hear that! What’s on your mind?", "That's awesome! How can I assist you today?"])
     elif "thank you" in msg.lower() or "thanks" in msg.lower():
         return random.choice(["You're very welcome!", "Anytime! Glad I could help."])
     elif msg.lower() in ["bye", "exit"]:
@@ -277,42 +279,37 @@ def get_priority_response(preprocessed_input):
 
 # ----------------------------------------
 
-model = "mistralai/mistral-7b-instruct"
+# model = "mistralai/mistral-7b-instruct"
 
-API_KEY = "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"
+API_KEY = "AIzaSyA4bFTPKOQ3O4iKLmvQgys_ZjH_J1MnTUs"
+genai.configure(api_key=API_KEY)
 
-def get_response_openrouter(prompt):
-    """Send request to OpenRouter with restrictions to general conversations only"""
-    url = "https://openrouter.ai/api/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
-    
-    system_prompt = """You are a simple conversation bot that only handles very general conversations.
-    Your responses should be limited to:
-    - Greetings (e.g., hello, hi, good morning/afternoon/evening)
-    - Farewells (e.g., goodbye, see you later, have a nice day)
-    - Simple positive/negative responses (e.g., "That's nice!", "I'm sorry to hear that")
-    - Basic acknowledgments (e.g., "I understand", "Okay")
-    
-    If asked about anything else, respond with: "I only handle general conversations like greetings and simple responses."
-    """
-    
-    data = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt}
-        ]
-    }
-
+def get_response_gemini(prompt):
+    """Send request to Gemini API with restrictions to general conversations only"""
     try:
-        response = requests.post(url, json=data, headers=headers)
-        response.raise_for_status()
-        return response.json()['choices'][0]['message']['content']
+        # Initialize the model
+        model = genai.GenerativeModel('gemini-1.5-flash')  
+        
+        # System prompt to restrict responses to general conversations
+        system_prompt = """You are a simple conversation bot that only handles very general conversations.
+        Your responses should be limited to:
+        - Greetings (e.g., hello, hi, good morning/afternoon/evening)
+        - Farewells (e.g., goodbye, see you later, have a nice day)
+        - Simple positive/negative responses (e.g., "That's nice!", "I'm sorry to hear that")
+        - Basic acknowledgments (e.g., "I understand", "Okay")
+        
+        If asked about anything else, respond with: "I only handle general conversations like greetings and simple responses."
+        """
+        
+        # Combine system prompt with user input
+        full_prompt = f"{system_prompt}\nUser: {prompt}\nAssistant:"
+        
+        # Generate response
+        response = model.generate_content(full_prompt)
+        
+        return response.text
     except Exception as e:
-        return f"Error: {e}"
+        return f"Error: {str(e)}"
 
 def is_general_conversation(text):
     """Check if the input text is a general conversation topic."""
@@ -427,7 +424,7 @@ def get_response(request):
 
             # Use LLM only for small talk (general conversation topics)
             if is_general_conversation(preprocessed_message):
-                llm_response = get_response_openrouter(preprocessed_message)
+                llm_response = get_response_gemini(preprocessed_message)
                 conversation_history.append((user_message, llm_response))
                 save_conversation_to_file(user_message, llm_response)
                 return JsonResponse({'text': llm_response})
