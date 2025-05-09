@@ -359,37 +359,54 @@
         }
 
         function speakResponse(text) {
-            window.speechSynthesis.cancel();
+    window.speechSynthesis.cancel();
 
-            if (isListening) {
-                recognition.stop();
-                isListening = false;
-                updateMicButton();
-            }
+    if (isListening) {
+        recognition.stop();
+        isListening = false;
+        updateMicButton();
+    }
 
-            const speech = new SpeechSynthesisUtterance(text);
-            speech.lang = 'en-IN';
+    const speech = new SpeechSynthesisUtterance(text);
+    speech.lang = 'en-IN';
 
-            if (selectedVoice) {
-                speech.voice = selectedVoice;
-            }
+    if (selectedVoice) {
+        speech.voice = selectedVoice;
+    }
 
-            speech.onstart = () => {
-                isBotSpeaking = true;
-                document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
-            };
+    speech.onstart = () => {
+        isBotSpeaking = true;
+        document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
+    };
 
-            speech.onend = () => {
-                isBotSpeaking = false;
-                if (conversationActive && !isListening) {
-                    recognition.start();
-                    isListening = true;
-                    document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice GIF">';
+    speech.onend = () => {
+        isBotSpeaking = false;
+        if (conversationActive && !isListening) {
+            // Add a small delay before restarting recognition
+            setTimeout(() => {
+                try {
+                    if (!isListening) {
+                        recognition.start();
+                        isListening = true;
+                        document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice GIF">';
+                    }
+                } catch (e) {
+                    console.log("Recognition start error:", e);
+                    // If start fails, try again after a short delay
+                    setTimeout(() => {
+                        if (!isListening) {
+                            recognition.start();
+                            isListening = true;
+                            document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice GIF">';
+                        }
+                    }, 500);
                 }
-            };
-
-            window.speechSynthesis.speak(speech);
+            }, 500);
         }
+    };
+
+    window.speechSynthesis.speak(speech);
+}
 
         function updateMicButton() {
             const micBtn = document.getElementById('mic-btn');
@@ -438,32 +455,39 @@
         }
 
         function startVoiceRecognition(initialStart = false) {
-            if (!('webkitSpeechRecognition' in window)) {
-                alert('Speech recognition is not supported in this browser.');
-                return;
-            }
-
-            if (isListening && !initialStart) {
-                recognition.stop();
-                isListening = false;
-                updateMicButton();
-                return;
-            }
-
-            recognition = new webkitSpeechRecognition();
-            recognition.lang = 'en-IN';
-            recognition.interimResults = false;
-            recognition.continuous = true;
-
-            recognition.onstart = function () {
-                isListening = true;
-                document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
-                document.querySelector('.mic-status').textContent = 'Listening...';
-                
-                if (!wakeWordDetected && !initialStart) {
-                    document.querySelector('.mic-status').textContent = 'Hello! I am Infi';
+                if (!('webkitSpeechRecognition' in window)) {
+                    alert('Speech recognition is not supported in this browser.');
+                    return;
                 }
-            };
+
+                if (isListening && !initialStart) {
+                    recognition.stop();
+                    isListening = false;
+                    updateMicButton();
+                    return;
+                }
+
+                // If recognition already exists and is running, stop it first
+                if (recognition && isListening) {
+                    recognition.stop();
+                    isListening = false;
+                }
+
+                recognition = new webkitSpeechRecognition();
+                recognition.lang = 'en-IN';
+                recognition.interimResults = false;
+                recognition.continuous = true;
+
+                recognition.onstart = function () {
+                    isListening = true;
+                    document.getElementById('mic-btn').innerHTML = '<img src="/static/assets/voicegif.gif" alt="Voice Active GIF">';
+                    document.querySelector('.mic-status').textContent = 'Listening...';
+                    
+                    if (!wakeWordDetected && !initialStart) {
+                        document.querySelector('.mic-status').textContent = 'Hello! I am Infi';
+                    }
+                };
+
 
             recognition.onresult = function (event) {
                 const transcript = event.results[event.results.length - 1][0].transcript.trim();
