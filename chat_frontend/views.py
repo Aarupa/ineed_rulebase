@@ -3,6 +3,7 @@
 import os
 import json
 import random
+import re
 import tempfile
 import logging
 from datetime import datetime, timedelta
@@ -284,165 +285,357 @@ def get_priority_response(preprocessed_input):
 API_KEY = "AIzaSyA4bFTPKOQ3O4iKLmvQgys_ZjH_J1MnTUs"
 genai.configure(api_key=API_KEY)
 
-def get_response_gemini(prompt):
-    """Send request to Gemini API with restrictions to general conversations only"""
-    try:
-        # Initialize the model
-        model = genai.GenerativeModel('gemini-1.5-flash')  
+# def get_response_gemini(prompt):
+#     """Send request to Gemini API with restrictions to general conversations only"""
+#     try:
+#         # Initialize the model
+#         model = genai.GenerativeModel('gemini-1.5-flash')  
         
-        # System prompt to restrict responses to general conversations
-        system_prompt = """You are a personal support bot for Indeed Inspiring Infotech.
-            Your role is to assist users with information related to Indeed Inspiring Infotech, using the official website: https://indeedinspiring.com.
-            Behavior Guidelines:
-            - Answer only questions related to Indeed Inspiring Infotech — its services, team, mission, clients, and offerings.
-            - For casual greetings or small talk (e.g., "hi", "hello", "how are you"), respond politely but briefly in a professional tone, then encourage the user to ask company-related questions.
-            Example:
-            "Hello. I’m here to help you with information about Indeed Inspiring Infotech."
-            "I’m doing well, thank you. Let me know if you need any information about our company."
-            - If asked who developed you, say:
-            "I was developed by the AI/ML team at Indeed Inspiring Infotech."
-            - If a user asks anything unrelated to the company (e.g., general knowledge, news, programming help, etc.), respond with:
-            "I'm here to assist you with information about Indeed Inspiring Infotech only."
-            - Do not ask the user questions in return.
-            - Keep all answers short, polite, and professional.
-            - Represent Indeed Inspiring Infotech with respect and clarity at all times.
+#         # System prompt to restrict responses to general conversations
+#         system_prompt = """You are a personal support bot for Indeed Inspiring Infotech.
+#             Your role is to assist users with information related to Indeed Inspiring Infotech, using the official website: https://indeedinspiring.com.
+#             Behavior Guidelines:
+#             - Answer only questions related to Indeed Inspiring Infotech — its services, team, mission, clients, and offerings.
+#             - For casual greetings or small talk (e.g., "hi", "hello", "how are you"), respond politely but briefly in a professional tone, then encourage the user to ask company-related questions.
+#             Example:
+#             "Hello. I’m here to help you with information about Indeed Inspiring Infotech."
+#             "I’m doing well, thank you. Let me know if you need any information about our company."
+#             - If asked who developed you, say:
+#             "I was developed by the AI/ML team at Indeed Inspiring Infotech."
+#             - If a user asks anything unrelated to the company (e.g., general knowledge, news, programming help, etc.), respond with:
+#             "I'm here to assist you with information about Indeed Inspiring Infotech only."
+#             - Do not ask the user questions in return.
+#             - Keep all answers short, polite, and professional.
+#             - Represent Indeed Inspiring Infotech with respect and clarity at all times.
+#         """
+        
+#         # Combine system prompt with user input
+#         full_prompt = f"{system_prompt}\nUser: {prompt}\nAssistant:"
+        
+#         # Generate response
+#         response = model.generate_content(full_prompt)
+        
+#         return response.text
+#     except Exception as e:
+#         return f"Error: {str(e)}"
+
+# def is_general_conversation(text):
+#     """Check if the input text is a general conversation topic."""
+#     text = text.lower().strip()
+
+#     # Expanded lists of general conversation topics
+#     greetings = [
+#         "hi", "hello", "hey", "greetings", "good morning", "good afternoon", "good evening", "howdy",
+#         "yo", "what's up", "hi there", "hello there", "hey there", "sup", "hiya", "morning", "evening",
+#         "how's it going", "how's everything", "what's new", "how do you do", "salutations", "good day",
+#         "how are you doing", "what's happening", "how's your day", "how's life", "hello world"
+#     ]
+#     farewells = [
+#         "bye", "goodbye", "see you", "farewell", "have a good day", "see ya", "take care", "later",
+#         "catch you later", "talk to you later", "bye bye", "peace", "good night", "see you soon",
+#         "see you later", "adios", "ciao", "so long", "until next time", "goodbye for now", "take it easy",
+#         "have a great day", "stay safe", "see you around", "cheerio", "all the best"
+#     ]
+#     positives = [
+#         "yes", "yeah", "yep", "sure", "ok", "okay", "great", "awesome", "fine", "absolutely", "definitely",
+#         "of course", "sure thing", "yup", "cool", "sounds good", "alright", "I'm good", "perfect", "no problem",
+#         "that's nice", "wonderful", "amazing", "fantastic", "excellent", "terrific", "splendid", "superb",
+#         "brilliant", "outstanding", "marvelous", "lovely", "fabulous", "phenomenal", "incredible", "exceptional"
+#     ]
+#     negatives = [
+#         "no", "nope", "nah", "not really", "not good", "never", "no way", "I don't think so", "not at all",
+#         "unfortunately not", "doesn't work", "not happening", "no thanks", "bad", "terrible", "horrible",
+#         "awful", "dreadful", "poor", "unacceptable", "disappointing", "unsatisfactory", "subpar", "lousy",
+#         "miserable", "pathetic", "tragic", "unfortunate", "not great", "not okay", "not fine", "not ideal"
+#     ]
+#     common_phrases = [
+#         "how are you", "what's up", "what's your name", "thank you", "thanks", "you're welcome", "nice to meet you",
+#         "good to see you", "how's it going", "how do you do", "what's new", "how's life", "how's everything",
+#         "pleased to meet you", "it's a pleasure", "how can I help you", "how can I assist you", "what can I do for you",
+#         "long time no see", "it's been a while", "what's going on", "what's the matter", "how have you been",
+#         "what's your favorite", "tell me more", "can you help me", "I need assistance", "thank you so much",
+#         "much appreciated", "you're the best", "no worries", "don't mention it", "anytime","I am good", "I am fine",
+#         "I am okay", "I am doing well", "I am alright", "I am doing fine", "I am doing great", "I am doing good",
+#     ]
+
+#     # Combine all phrases into a single list for matching
+#     general_conversation_phrases = greetings + farewells + positives + negatives + common_phrases
+
+#     # Check for exact matches or partial matches
+#     for phrase in general_conversation_phrases:
+#         if phrase in text:
+#             return True
+
+#     # Fallback to fuzzy matching for more flexibility
+#     from fuzzywuzzy import fuzz
+#     for phrase in general_conversation_phrases:
+#         if fuzz.partial_ratio(phrase, text) > 80:  # Adjust threshold as needed
+#             return True
+
+#     return False
+
+# # -------------------- HTTP Request Handlers --------------------
+# @csrf_exempt
+# def get_response(request):
+#     """Handle HTTP requests and return chatbot responses as JSON."""
+#     global conversation_history
+#     if request.method == 'POST':
+#         data = json.loads(request.body)
+#         user_message = data.get('prompt', '')
+#         logging.debug(f"User message: {user_message}")  # Log the user message
+#         if user_message:
+#             # Preprocess the user message
+#             preprocessed_message = user_message.strip().lower()
+#             logging.debug(f"Preprocessed message: {preprocessed_message}")  # Log the preprocessed message
+
+#             # Handle date-related queries first
+#             date_related_response = handle_date_related_queries(preprocessed_message)
+#             if date_related_response:
+#                 conversation_history.append((user_message, date_related_response))
+#                 save_conversation_to_file(user_message, date_related_response)
+#                 return JsonResponse({'text': date_related_response})
+
+#             # Handle time-based greetings
+#             time_based_response = handle_time_based_greeting(preprocessed_message)
+#             if time_based_response:
+#                 conversation_history.append((user_message, time_based_response))
+#                 save_conversation_to_file(user_message, time_based_response)
+#                 return JsonResponse({'text': time_based_response})
+
+#             # Handle general NLP responses (e.g., "Hi", "Hello")
+#             nlp_response = generate_nlp_response(preprocessed_message)
+#             if nlp_response:
+#                 conversation_history.append((user_message, nlp_response))
+#                 save_conversation_to_file(user_message, nlp_response)
+#                 return JsonResponse({'text': nlp_response})
+
+#             # Handle contextual responses
+#             contextual_response = get_contextual_response(preprocessed_message)
+#             if contextual_response:
+#                 conversation_history.append((user_message, contextual_response))
+#                 save_conversation_to_file(user_message, contextual_response)
+#                 return JsonResponse({'text': contextual_response})
+
+#             # Handle classified queries
+#             category, response = classify_query(preprocessed_message)
+#             if response:
+#                 conversation_history.append((user_message, response))
+#                 save_conversation_to_file(user_message, response)
+#                 return JsonResponse({'text': response})
+
+#             # Handle priority responses (greetings, farewells, general responses)
+#             priority_response = get_priority_response(preprocessed_message)
+#             if priority_response:
+#                 conversation_history.append((user_message, priority_response))
+#                 save_conversation_to_file(user_message, priority_response)
+#                 return JsonResponse({'text': priority_response})
+
+#             # Use LLM only for small talk (general conversation topics)
+#             if is_general_conversation(preprocessed_message):
+#                 llm_response = get_response_gemini(preprocessed_message)
+#                 conversation_history.append((user_message, llm_response))
+#                 save_conversation_to_file(user_message, llm_response)
+#                 return JsonResponse({'text': llm_response})
+
+#             # If no match is found, return a default response
+#             default_response = "I'm sorry, I don't have information on that topic."
+#             conversation_history.append((user_message, default_response))
+#             save_conversation_to_file(user_message, default_response)
+#             return JsonResponse({'text': default_response})
+        
+#     return JsonResponse({'text': 'Invalid request'}, status=400)
+
+# @csrf_exempt
+# def clear_history(request):
+#     """Clear the conversation history."""
+#     global conversation_history
+#     if request.method == 'POST':
+#         conversation_history.clear()
+#         return JsonResponse({'status': 'success', 'message': 'Conversation history cleared.'})
+#     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+# def chat(request):
+#     """Render the chatbot HTML template."""
+
+
+#     try:
+#         return render(request, 'chatbot.html')
+#     except Exception as e:
+#         logging.error(f"Error loading template: {e}")
+#         return JsonResponse({'error': str(e)}, status=500)
+
+# # -------------------- Speech and Listening Functions --------------------
+# def speak(text):
+#     """Convert chatbot's text response to speech using gTTS."""
+#     try:
+#         tts = gTTS(text=text, lang='en')
+#         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio_file:
+#             tts.save(temp_audio_file.name)
+#             temp_audio_path = temp_audio_file.name
+#         audio = AudioSegment.from_file(temp_audio_path, format="mp3")
+#         play(audio)
+#         os.remove(temp_audio_path)
+#     except Exception as e:
+#         print(f"An error occurred during text-to-speech conversion: {e}")
+
+# def listen():
+#     """Toggle microphone to listen continuously until user says 'bye' or 'exit'."""
+#     import sounddevice as sd
+#     import numpy as np
+#     from scipy.io.wavfile import write
+
+#     mic_active = False
+#     print("Press Enter to toggle the microphone on/off. Say 'bye' or 'exit' to stop completely.")
+
+#     while True:
+#         command = input("Press Enter to toggle mic or type 'exit' to quit: ").strip().lower()
+#         if command in ["exit", "bye", "bye bye"]:
+#             conversation_history.clear()
+#             print("Exiting the chat. Goodbye!")
+#             break
+
+#         mic_active = not mic_active
+#         if mic_active:
+#             print("Microphone is ON. Listening...")
+#             try:
+#                 duration = 15
+#                 audio = sd.rec(int(duration * 16000), samplerate=16000, channels=1, dtype='int16')
+#                 sd.wait()
+#                 with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio_file:
+#                     write(temp_audio_file.name, 16000, audio)
+#                     temp_audio_path = temp_audio_file.name
+#                 audio_segment = AudioSegment.from_wav(temp_audio_path)
+#                 mp3_path = temp_audio_path.replace(".wav", ".mp3")
+#                 audio_segment.export(mp3_path, format="mp3")
+#                 result = whisper_model.transcribe(temp_audio_path)
+#                 user_message = result["text"]
+#                 os.remove(temp_audio_path)
+#                 os.remove(mp3_path)
+#                 if "bye" in user_message.lower() or "exit" in user_message.lower():
+#                     conversation_history.clear()
+#                     print("Exiting the chat. Goodbye!")
+#                     mic_active = False
+#                     break
+#                 request = HttpRequest()
+#                 request.method = 'POST'
+#                 request.body = json.dumps({'prompt': user_message}).encode('utf-8')
+#                 response = get_response(request)
+#                 response_text = json.loads(response.content.decode('utf-8'))['text']
+#                 print(f"Chatbot: {response_text}")
+#             except Exception as e:
+#                 print(f"An error occurred: {e}")
+#         else:
+#             print("Microphone is OFF. Press Enter to toggle it back on.")
+
+
+# -------------------- Enhanced Gemini Handler --------------------
+def get_response_gemini(prompt, conversation_context=None):
+    """Enhanced Gemini handler that processes all queries with strict guidelines"""
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # System prompt with strict rules
+        system_prompt = f"""You are a support assistant for Indeed Inspiring Infotech.
+        Strict Rules:
+        1. ALWAYS respond in 1-2 short sentences
+        2. Only use information from https://indeedinspiring.com
+        3. For greetings/small talk, respond professionally but briefly
+        4. For company info, provide accurate details
+        5. For unknown queries: "I don't have information about that"
+        6. Never invent information
+        
+        Current Context: {conversation_context or 'No specific context'}
         """
         
-        # Combine system prompt with user input
-        full_prompt = f"{system_prompt}\nUser: {prompt}\nAssistant:"
-        
-        # Generate response
-        response = model.generate_content(full_prompt)
-        
+        response = model.generate_content(
+            system_prompt + "\nUser Query: " + prompt,
+            generation_config={
+                "max_output_tokens": 150,
+                "temperature": 0.3
+            }
+        )
         return response.text
     except Exception as e:
-        return f"Error: {str(e)}"
+        logging.error(f"Gemini error: {str(e)}")
+        return "I encountered an error processing your request."
 
-def is_general_conversation(text):
-    """Check if the input text is a general conversation topic."""
-    text = text.lower().strip()
-
-    # Expanded lists of general conversation topics
-    greetings = [
-        "hi", "hello", "hey", "greetings", "good morning", "good afternoon", "good evening", "howdy",
-        "yo", "what's up", "hi there", "hello there", "hey there", "sup", "hiya", "morning", "evening",
-        "how's it going", "how's everything", "what's new", "how do you do", "salutations", "good day",
-        "how are you doing", "what's happening", "how's your day", "how's life", "hello world"
+# -------------------- Unified Response Handler --------------------
+def get_final_response(user_message):
+    """Handle all responses through a unified pipeline"""
+    # Preprocess input
+    processed_input = preprocess_recognized_text(user_message.lower())
+    
+    # Build conversation context
+    context_parts = []
+    if conversation_history:
+        last_exchange = conversation_history[-1]
+        context_parts.append(f"Previous: User said '{last_exchange[0]}', you responded '{last_exchange[1]}'")
+    context = " | ".join(context_parts) if context_parts else "New conversation"
+    
+    # Special case handlers (in order of priority)
+    handlers = [
+        handle_date_related_queries,
+        handle_time_based_greeting,
+        generate_nlp_response,
+        get_contextual_response,
+        lambda x: classify_query(x)[1],  # Get just the response
+        get_priority_response
     ]
-    farewells = [
-        "bye", "goodbye", "see you", "farewell", "have a good day", "see ya", "take care", "later",
-        "catch you later", "talk to you later", "bye bye", "peace", "good night", "see you soon",
-        "see you later", "adios", "ciao", "so long", "until next time", "goodbye for now", "take it easy",
-        "have a great day", "stay safe", "see you around", "cheerio", "all the best"
-    ]
-    positives = [
-        "yes", "yeah", "yep", "sure", "ok", "okay", "great", "awesome", "fine", "absolutely", "definitely",
-        "of course", "sure thing", "yup", "cool", "sounds good", "alright", "I'm good", "perfect", "no problem",
-        "that's nice", "wonderful", "amazing", "fantastic", "excellent", "terrific", "splendid", "superb",
-        "brilliant", "outstanding", "marvelous", "lovely", "fabulous", "phenomenal", "incredible", "exceptional"
-    ]
-    negatives = [
-        "no", "nope", "nah", "not really", "not good", "never", "no way", "I don't think so", "not at all",
-        "unfortunately not", "doesn't work", "not happening", "no thanks", "bad", "terrible", "horrible",
-        "awful", "dreadful", "poor", "unacceptable", "disappointing", "unsatisfactory", "subpar", "lousy",
-        "miserable", "pathetic", "tragic", "unfortunate", "not great", "not okay", "not fine", "not ideal"
-    ]
-    common_phrases = [
-        "how are you", "what's up", "what's your name", "thank you", "thanks", "you're welcome", "nice to meet you",
-        "good to see you", "how's it going", "how do you do", "what's new", "how's life", "how's everything",
-        "pleased to meet you", "it's a pleasure", "how can I help you", "how can I assist you", "what can I do for you",
-        "long time no see", "it's been a while", "what's going on", "what's the matter", "how have you been",
-        "what's your favorite", "tell me more", "can you help me", "I need assistance", "thank you so much",
-        "much appreciated", "you're the best", "no worries", "don't mention it", "anytime","I am good", "I am fine",
-        "I am okay", "I am doing well", "I am alright", "I am doing fine", "I am doing great", "I am doing good",
-    ]
+    
+    # Try each handler in order
+    for handler in handlers:
+        response = handler(processed_input)
+        if response:
+            return response
+    
+    # Final fallback to Gemini for everything else
+    return get_response_gemini(user_message, context)
 
-    # Combine all phrases into a single list for matching
-    general_conversation_phrases = greetings + farewells + positives + negatives + common_phrases
-
-    # Check for exact matches or partial matches
-    for phrase in general_conversation_phrases:
-        if phrase in text:
-            return True
-
-    # Fallback to fuzzy matching for more flexibility
-    from fuzzywuzzy import fuzz
-    for phrase in general_conversation_phrases:
-        if fuzz.partial_ratio(phrase, text) > 80:  # Adjust threshold as needed
-            return True
-
-    return False
-
-# -------------------- HTTP Request Handlers --------------------
+# -------------------- Modified HTTP Handler --------------------
 @csrf_exempt
 def get_response(request):
-    """Handle HTTP requests and return chatbot responses as JSON."""
+    """Simplified HTTP handler using unified response system"""
     global conversation_history
     if request.method == 'POST':
         data = json.loads(request.body)
         user_message = data.get('prompt', '')
-        logging.debug(f"User message: {user_message}")  # Log the user message
-        if user_message:
-            # Preprocess the user message
-            preprocessed_message = user_message.strip().lower()
-            logging.debug(f"Preprocessed message: {preprocessed_message}")  # Log the preprocessed message
-
-            # Handle date-related queries first
-            date_related_response = handle_date_related_queries(preprocessed_message)
-            if date_related_response:
-                conversation_history.append((user_message, date_related_response))
-                save_conversation_to_file(user_message, date_related_response)
-                return JsonResponse({'text': date_related_response})
-
-            # Handle time-based greetings
-            time_based_response = handle_time_based_greeting(preprocessed_message)
-            if time_based_response:
-                conversation_history.append((user_message, time_based_response))
-                save_conversation_to_file(user_message, time_based_response)
-                return JsonResponse({'text': time_based_response})
-
-            # Handle general NLP responses (e.g., "Hi", "Hello")
-            nlp_response = generate_nlp_response(preprocessed_message)
-            if nlp_response:
-                conversation_history.append((user_message, nlp_response))
-                save_conversation_to_file(user_message, nlp_response)
-                return JsonResponse({'text': nlp_response})
-
-            # Handle contextual responses
-            contextual_response = get_contextual_response(preprocessed_message)
-            if contextual_response:
-                conversation_history.append((user_message, contextual_response))
-                save_conversation_to_file(user_message, contextual_response)
-                return JsonResponse({'text': contextual_response})
-
-            # Handle classified queries
-            category, response = classify_query(preprocessed_message)
-            if response:
-                conversation_history.append((user_message, response))
-                save_conversation_to_file(user_message, response)
-                return JsonResponse({'text': response})
-
-            # Handle priority responses (greetings, farewells, general responses)
-            priority_response = get_priority_response(preprocessed_message)
-            if priority_response:
-                conversation_history.append((user_message, priority_response))
-                save_conversation_to_file(user_message, priority_response)
-                return JsonResponse({'text': priority_response})
-
-            # Use LLM only for small talk (general conversation topics)
-            if is_general_conversation(preprocessed_message):
-                llm_response = get_response_gemini(preprocessed_message)
-                conversation_history.append((user_message, llm_response))
-                save_conversation_to_file(user_message, llm_response)
-                return JsonResponse({'text': llm_response})
-
-            # If no match is found, return a default response
-            default_response = "I'm sorry, I don't have information on that topic."
-            conversation_history.append((user_message, default_response))
-            save_conversation_to_file(user_message, default_response)
-            return JsonResponse({'text': default_response})
         
+        if user_message:
+            # Get response from unified handler
+            bot_response = get_final_response(user_message)
+            
+            # Save to history
+            conversation_history.append((user_message, bot_response))
+            save_conversation_to_file(user_message, bot_response)
+            
+            return JsonResponse({'text': bot_response})
+    
     return JsonResponse({'text': 'Invalid request'}, status=400)
+
+# -------------------- Enhanced Speech Recognition --------------------
+def enhance_speech_recognition(text):
+    """Improved speech recognition correction"""
+    corrections = {
+        r"\b(indian|india|indexing)\b": "indeed",
+        r"\b(inspire ring|inspiron)\b": "inspiring",
+        r"\b(info tech)\b": "infotech",
+        r"\b(crushal)\b": "prushal"
+    }
+    
+    # Apply corrections
+    for pattern, replacement in corrections.items():
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    
+    # Standardize company name
+    text = re.sub(r"\b(indeed\s*inspiring\s*(infotech|info\s*tech)?)\b", 
+                 "Indeed Inspiring Infotech", text, flags=re.IGNORECASE)
+    
+    return text.strip()
+
+# Update preprocess_recognized_text to use the enhanced version
+preprocess_recognized_text = enhance_speech_recognition
+
+# -------------------- Modified Listen Function --------------------
 
 @csrf_exempt
 def clear_history(request):
@@ -477,51 +670,47 @@ def speak(text):
     except Exception as e:
         print(f"An error occurred during text-to-speech conversion: {e}")
 
+        
 def listen():
-    """Toggle microphone to listen continuously until user says 'bye' or 'exit'."""
+    """Enhanced voice interaction with better error handling"""
     import sounddevice as sd
-    import numpy as np
     from scipy.io.wavfile import write
-
-    mic_active = False
-    print("Press Enter to toggle the microphone on/off. Say 'bye' or 'exit' to stop completely.")
-
+    
+    print("Voice interaction ready. Say 'exit' to quit.")
+    
     while True:
-        command = input("Press Enter to toggle mic or type 'exit' to quit: ").strip().lower()
-        if command in ["exit", "bye", "bye bye"]:
-            conversation_history.clear()
-            print("Exiting the chat. Goodbye!")
+        try:
+            # Record audio
+            duration = 5  # Shorter chunks for faster response
+            print("\nListening... (speak now)")
+            audio = sd.rec(int(duration * 16000), samplerate=16000, channels=1, dtype='int16')
+            sd.wait()
+            
+            # Save and transcribe
+            with tempfile.NamedTemporaryFile(suffix=".wav") as tmpfile:
+                write(tmpfile.name, 16000, audio)
+                raw_text = whisper_model.transcribe(tmpfile.name)["text"]
+            
+            if not raw_text.strip():
+                continue
+                
+            # Enhanced processing
+            processed_text = preprocess_recognized_text(raw_text)
+            print(f"You said: {processed_text}")
+            
+            # Check for exit command
+            if any(cmd in processed_text.lower() for cmd in ["exit", "bye", "stop"]):
+                print("Goodbye!")
+                break
+                
+            # Get and speak response
+            response = get_final_response(processed_text)
+            print(f"Assistant: {response}")
+            speak(response)
+            
+        except KeyboardInterrupt:
+            print("\nSession ended")
             break
-
-        mic_active = not mic_active
-        if mic_active:
-            print("Microphone is ON. Listening...")
-            try:
-                duration = 15
-                audio = sd.rec(int(duration * 16000), samplerate=16000, channels=1, dtype='int16')
-                sd.wait()
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio_file:
-                    write(temp_audio_file.name, 16000, audio)
-                    temp_audio_path = temp_audio_file.name
-                audio_segment = AudioSegment.from_wav(temp_audio_path)
-                mp3_path = temp_audio_path.replace(".wav", ".mp3")
-                audio_segment.export(mp3_path, format="mp3")
-                result = whisper_model.transcribe(temp_audio_path)
-                user_message = result["text"]
-                os.remove(temp_audio_path)
-                os.remove(mp3_path)
-                if "bye" in user_message.lower() or "exit" in user_message.lower():
-                    conversation_history.clear()
-                    print("Exiting the chat. Goodbye!")
-                    mic_active = False
-                    break
-                request = HttpRequest()
-                request.method = 'POST'
-                request.body = json.dumps({'prompt': user_message}).encode('utf-8')
-                response = get_response(request)
-                response_text = json.loads(response.content.decode('utf-8'))['text']
-                print(f"Chatbot: {response_text}")
-            except Exception as e:
-                print(f"An error occurred: {e}")
-        else:
-            print("Microphone is OFF. Press Enter to toggle it back on.")
+        except Exception as e:
+            print(f"Error: {e}")
+            speak("Sorry, I encountered an error. Please try again.")

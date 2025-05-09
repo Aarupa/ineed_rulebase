@@ -4,6 +4,7 @@
             "question": "What is Indeed Inspiring Infotech?",
             "keywords": [
                 "company information",
+                "What is Indeed Inspiring",
                 "about company",
                 "company overview"
             ],
@@ -12,6 +13,20 @@
                 "We are a company dedicated to bridging the gap between industry and academia through technology.",
                 "Indeed Inspiring provides IT training and corporate solutions to help businesses and individuals grow."
             ]
+        },
+        {
+            "question": "Founder of indeed Inspiring Infotech?",
+            "keywords": [
+                "founder",
+                "CEO",
+                "leadership"
+            ],
+            "responses": [
+                "The founder of Indeed Inspiring Infotech is Mr.Kushal Sharma.",
+                "Mr.Kushal Sharma is the visionary behind the company's mission and training programs.",
+                "Under the leadership of Mr.Kushal Sharma, the company has grown to become a leading training provider."
+            ]
+
         },
         {
             "question": "What is Indeed Inspiring Infotech",
