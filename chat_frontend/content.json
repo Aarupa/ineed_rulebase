@@ -4,6 +4,7 @@
             "question": "What is Indeed Inspiring Infotech?",
             "keywords": [
                 "company information",
+                "What is Indeed Inspiring",
                 "about company",
                 "company overview"
             ],
@@ -258,6 +259,20 @@
                 "While some courses have prerequisites, we also offer foundation courses for beginners.",
                 "Certain advanced courses may require prior experience or relevant academic qualifications."
             ]
+        },
+        {
+            "question": "Founder of indeed Inspiring Infotech?",
+            "keywords": [
+                "founder",
+                "CEO",
+                "leadership"
+            ],
+            "responses": [
+                "The founder of Indeed Inspiring Infotech is Mr.Kushal Sharma.",
+                "Mr.Kushal Sharma is the visionary behind the company's mission and training programs.",
+                "Under the leadership of Mr.Kushal Sharma, the company has grown to become a leading training provider."
+            ]
+
         },
         {
             "question": "Do you provide study materials for the courses?",
