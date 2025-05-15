@@ -7,28 +7,30 @@ import re
 import tempfile
 import logging
 from datetime import datetime, timedelta
-import string  # Ensure this import is present at the top of the file
+import string
+import threading
+import time
 
 # Third-party imports
-from textblob import TextBlob  # Used in correct_spelling
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer  # Used in analyze_sentiment
-from fuzzywuzzy import process  # Used in get_best_match
-from pydub import AudioSegment  # Used in speak and listen
-from pydub.playback import play  # Used in speak
-from gtts import gTTS  # Used in speak
-import whisper  # Used in listen for transcribing audio
+from textblob import TextBlob
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from fuzzywuzzy import process
+from pydub import AudioSegment
+from pydub.playback import play
+from gtts import gTTS
+import whisper
 import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
 # Django imports
-from django.http import JsonResponse, HttpRequest  # For views and simulated requests
-from django.views.decorators.csrf import csrf_exempt  # For CSRF exemption on views
-from django.shortcuts import render  # For rendering templates
+from django.http import JsonResponse, HttpRequest
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
 
-import spacy  # Used in generate_nlp_response
-import nltk  # Used to download 'wordnet'
-
+import spacy
+import nltk
 import google.generativeai as genai
-
 
 # -------------------- Constants and Configurations --------------------
 # File paths
@@ -60,8 +62,6 @@ if os.path.exists(dialogue_history_path):
     with open(dialogue_history_path, 'w', encoding='utf-8') as f:
         json.dump({}, f, indent=4, ensure_ascii=False)
 
-
-
 # Load Whisper model
 whisper_model = whisper.load_model("tiny")
 
@@ -73,14 +73,66 @@ greetings_path = os.path.join(script_dir, 'json_files', 'greetings.json')
 farewells_path = os.path.join(script_dir, 'json_files', 'farewells.json')
 general_path = os.path.join(script_dir, 'json_files', 'general.json')
 
-with open(greetings_path, 'r', encoding='utf-8') as f:  # Specify encoding
+with open(greetings_path, 'r', encoding='utf-8') as f:
     greetings_data = json.load(f)
 
-with open(farewells_path, 'r', encoding='utf-8') as f:  # Specify encoding
+with open(farewells_path, 'r', encoding='utf-8') as f:
     farewells_data = json.load(f)
 
-with open(general_path, 'r', encoding='utf-8') as f:  # Specify encoding
+with open(general_path, 'r', encoding='utf-8') as f:
     general_data = json.load(f)
+
+# Gemini API configuration
+API_KEY = "AIzaSyA4bFTPKOQ3O4iKLmvQgys_ZjH_J1MnTUs"
+genai.configure(api_key=API_KEY)
+
+# -------------------- Website Crawler --------------------
+def crawl_website(base_url, max_pages=10):
+    """Crawl the website and index all page content"""
+    indexed_content = {}
+    visited = set()
+    to_visit = [base_url]
+    
+    while to_visit and len(visited) < max_pages:
+        url = to_visit.pop()
+        try:
+            response = requests.get(url, timeout=10)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Store page content with URL as key
+            indexed_content[url] = {
+                'title': soup.title.string if soup.title else 'No Title',
+                'text': ' '.join(soup.stripped_strings),
+                'links': []
+            }
+            
+            # Extract and queue new links
+            for link in soup.find_all('a', href=True):
+                absolute_url = urljoin(base_url, link['href'])
+                if absolute_url.startswith(base_url) and absolute_url not in visited:
+                    indexed_content[url]['links'].append(absolute_url)
+                    if absolute_url not in to_visit:
+                        to_visit.append(absolute_url)
+            
+            visited.add(url)
+        except Exception as e:
+            print(f"Error crawling {url}: {str(e)}")
+    
+    return indexed_content
+
+# Initialize website index
+WEBSITE_INDEX = crawl_website("https://indeedinspiring.com")
+
+# Background website content refresher
+def refresh_website_content():
+    """Periodically update website content"""
+    while True:
+        global WEBSITE_INDEX
+        WEBSITE_INDEX = crawl_website("https://indeedinspiring.com")
+        time.sleep(86400)  # Refresh daily
+
+refresh_thread = threading.Thread(target=refresh_website_content, daemon=True)
+refresh_thread.start()
 
 # -------------------- Utility Functions --------------------
 def save_conversation_to_file(user_message, response):
@@ -110,18 +162,34 @@ def analyze_sentiment(msg):
         return "negative"
     return "neutral"
 
-def preprocess_recognized_text(text): 
-    """Correct common misinterpretations in recognized speech."""
-    corrections = {
-        "crushal": "prushal",
-        "india": "indeed",
-        "indiaa": "indeed",
-        "ended": "indeed",
-        "inspiron": "inspiring",
-        "inspire ring": "inspiring"
-    }
-    words = text.split()
-    return " ".join(corrections.get(word.lower(), word) for word in words)
+def enhance_speech_recognition(text):
+    """Advanced correction for Indeed Inspiring Infotech variations"""
+    # Phonetic correction mapping with priority
+    corrections = [
+        (r"\b(indian|india|indexing|indeedin|indie|indigo|indenting|indentation)\s*(inspiring|spring|spire|spirit|sparring)\s*(infotech|info tech|in tech|inft|tech)?\b", 
+         "Indeed Inspiring Infotech"),
+        (r"\b(indeed|ended|indoor|indie)\s*(inspiring|spring|spire|spirit)\b", 
+         "Indeed Inspiring"),
+        (r"\b(indeed|indian)\s*(infotech|info tech)\b", 
+         "Indeed Infotech"),
+        (r"\b(inspiring|spring)\s*(infotech)\b", 
+         "Inspiring Infotech"),
+        (r"\b(indeed inspiring|indian inspiring)\b", 
+         "Indeed Inspiring Infotech")
+    ]
+    
+    # Apply corrections in priority order
+    for pattern, replacement in corrections:
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    
+    # Final standardization
+    text = re.sub(r"Indeed(\s*Inspiring)?(\s*Infotech)?", 
+                 "Indeed Inspiring Infotech", text, flags=re.IGNORECASE)
+    
+    return text.strip()
+
+# Update preprocess_recognized_text to use the enhanced version
+preprocess_recognized_text = enhance_speech_recognition
 
 # -------------------- Chatbot Logic --------------------
 def classify_query(msg):
@@ -163,15 +231,13 @@ def classify_query(msg):
 
 def generate_nlp_response(msg):
     """Generate a basic NLP response for general conversation."""
-
-
     doc = nlp(msg)
     if any(token.lower_ in ["hi ", "hello", "hey", "hii"] for token in doc):
-        return random.choice(["Hey there! How's your day going?", "Hello! What’s up?", "Hi! How can I assist you today?"])
+        return random.choice(["Hey there! How's your day going?", "Hello! What's up?", "Hi! How can I assist you today?"])
     elif "how are you" in msg.lower():
         return random.choice(["I'm doing great, thanks for asking! How about you?", "I'm good! Hope you're having a great day too."])
     elif msg.lower() in ["great", "good", "awesome", "fantastic", "amazing"]:
-        return random.choice(["Glad to hear that! What’s on your mind?", "That's awesome! How can I assist you today?"])
+        return random.choice(["Glad to hear that! What's on your mind?", "That's awesome! How can I assist you today?"])
     elif "thank you" in msg.lower() or "thanks" in msg.lower():
         return random.choice(["You're very welcome!", "Anytime! Glad I could help."])
     elif msg.lower() in ["bye", "exit"]:
@@ -182,7 +248,6 @@ def generate_nlp_response(msg):
 
 def get_contextual_response(user_message):
     """Generate a contextual response based on the user's message."""
-    # Example logic for generating a contextual response
     if "weather" in user_message.lower():
         return "I'm not equipped to provide weather updates, but you can check a weather app!"
     elif "time" in user_message.lower():
@@ -230,7 +295,6 @@ def handle_time_based_greeting(msg):
     category, response = classify_query(msg)
     if response:
         return response
-
     
 def handle_date_related_queries(msg):
     """Handle date-related queries and provide an appropriate response."""
@@ -246,8 +310,8 @@ def handle_date_related_queries(msg):
         "day before yesterday": today - timedelta(days=2),
         "next week": today + timedelta(weeks=1),
         "last week": today - timedelta(weeks=1),
-        "next month": (today.replace(day=28) + timedelta(days=4)).replace(day=1),  # First day of next month
-        "last month": (today.replace(day=1) - timedelta(days=1)).replace(day=1),  # First day of last month
+        "next month": (today.replace(day=28) + timedelta(days=4)).replace(day=1),
+        "last month": (today.replace(day=1) - timedelta(days=1)).replace(day=1),
         "next year": today.replace(year=today.year + 1),
         "last year": today.replace(year=today.year - 1)
     }
@@ -264,316 +328,73 @@ def handle_date_related_queries(msg):
     return None
 
 def get_priority_response(preprocessed_input):
-    """
-    Check if the input matches greetings, farewells, or general responses.
-    """
+    """Check if the input matches greetings, farewells, or general responses."""
     # Normalize input by removing punctuation and converting to lowercase
     normalized_input = preprocessed_input.translate(str.maketrans('', '', string.punctuation)).lower()
     for category, data in [("greetings", greetings_data["greetings"]),
                            ("farewells", farewells_data["farewells"]),
                            ("general", general_data["general"])]:
-        if normalized_input in map(str.lower, data["inputs"]):  # Case-insensitive matching
+        if normalized_input in map(str.lower, data["inputs"]):
             logging.debug(f"Matched {category} for input: {normalized_input}")
             return random.choice(data["responses"])
     logging.debug(f"No match found in priority responses for input: {normalized_input}")
     return None
 
-# ----------------------------------------
-
-# model = "mistralai/mistral-7b-instruct"
-
-API_KEY = "AIzaSyA4bFTPKOQ3O4iKLmvQgys_ZjH_J1MnTUs"
-genai.configure(api_key=API_KEY)
-
-# def get_response_gemini(prompt):
-#     """Send request to Gemini API with restrictions to general conversations only"""
-#     try:
-#         # Initialize the model
-#         model = genai.GenerativeModel('gemini-1.5-flash')  
-        
-#         # System prompt to restrict responses to general conversations
-#         system_prompt = """You are a personal support bot for Indeed Inspiring Infotech.
-#             Your role is to assist users with information related to Indeed Inspiring Infotech, using the official website: https://indeedinspiring.com.
-#             Behavior Guidelines:
-#             - Answer only questions related to Indeed Inspiring Infotech — its services, team, mission, clients, and offerings.
-#             - For casual greetings or small talk (e.g., "hi", "hello", "how are you"), respond politely but briefly in a professional tone, then encourage the user to ask company-related questions.
-#             Example:
-#             "Hello. I’m here to help you with information about Indeed Inspiring Infotech."
-#             "I’m doing well, thank you. Let me know if you need any information about our company."
-#             - If asked who developed you, say:
-#             "I was developed by the AI/ML team at Indeed Inspiring Infotech."
-#             - If a user asks anything unrelated to the company (e.g., general knowledge, news, programming help, etc.), respond with:
-#             "I'm here to assist you with information about Indeed Inspiring Infotech only."
-#             - Do not ask the user questions in return.
-#             - Keep all answers short, polite, and professional.
-#             - Represent Indeed Inspiring Infotech with respect and clarity at all times.
-#         """
-        
-#         # Combine system prompt with user input
-#         full_prompt = f"{system_prompt}\nUser: {prompt}\nAssistant:"
-        
-#         # Generate response
-#         response = model.generate_content(full_prompt)
-        
-#         return response.text
-#     except Exception as e:
-#         return f"Error: {str(e)}"
-
-# def is_general_conversation(text):
-#     """Check if the input text is a general conversation topic."""
-#     text = text.lower().strip()
-
-#     # Expanded lists of general conversation topics
-#     greetings = [
-#         "hi", "hello", "hey", "greetings", "good morning", "good afternoon", "good evening", "howdy",
-#         "yo", "what's up", "hi there", "hello there", "hey there", "sup", "hiya", "morning", "evening",
-#         "how's it going", "how's everything", "what's new", "how do you do", "salutations", "good day",
-#         "how are you doing", "what's happening", "how's your day", "how's life", "hello world"
-#     ]
-#     farewells = [
-#         "bye", "goodbye", "see you", "farewell", "have a good day", "see ya", "take care", "later",
-#         "catch you later", "talk to you later", "bye bye", "peace", "good night", "see you soon",
-#         "see you later", "adios", "ciao", "so long", "until next time", "goodbye for now", "take it easy",
-#         "have a great day", "stay safe", "see you around", "cheerio", "all the best"
-#     ]
-#     positives = [
-#         "yes", "yeah", "yep", "sure", "ok", "okay", "great", "awesome", "fine", "absolutely", "definitely",
-#         "of course", "sure thing", "yup", "cool", "sounds good", "alright", "I'm good", "perfect", "no problem",
-#         "that's nice", "wonderful", "amazing", "fantastic", "excellent", "terrific", "splendid", "superb",
-#         "brilliant", "outstanding", "marvelous", "lovely", "fabulous", "phenomenal", "incredible", "exceptional"
-#     ]
-#     negatives = [
-#         "no", "nope", "nah", "not really", "not good", "never", "no way", "I don't think so", "not at all",
-#         "unfortunately not", "doesn't work", "not happening", "no thanks", "bad", "terrible", "horrible",
-#         "awful", "dreadful", "poor", "unacceptable", "disappointing", "unsatisfactory", "subpar", "lousy",
-#         "miserable", "pathetic", "tragic", "unfortunate", "not great", "not okay", "not fine", "not ideal"
-#     ]
-#     common_phrases = [
-#         "how are you", "what's up", "what's your name", "thank you", "thanks", "you're welcome", "nice to meet you",
-#         "good to see you", "how's it going", "how do you do", "what's new", "how's life", "how's everything",
-#         "pleased to meet you", "it's a pleasure", "how can I help you", "how can I assist you", "what can I do for you",
-#         "long time no see", "it's been a while", "what's going on", "what's the matter", "how have you been",
-#         "what's your favorite", "tell me more", "can you help me", "I need assistance", "thank you so much",
-#         "much appreciated", "you're the best", "no worries", "don't mention it", "anytime","I am good", "I am fine",
-#         "I am okay", "I am doing well", "I am alright", "I am doing fine", "I am doing great", "I am doing good",
-#     ]
-
-#     # Combine all phrases into a single list for matching
-#     general_conversation_phrases = greetings + farewells + positives + negatives + common_phrases
-
-#     # Check for exact matches or partial matches
-#     for phrase in general_conversation_phrases:
-#         if phrase in text:
-#             return True
-
-#     # Fallback to fuzzy matching for more flexibility
-#     from fuzzywuzzy import fuzz
-#     for phrase in general_conversation_phrases:
-#         if fuzz.partial_ratio(phrase, text) > 80:  # Adjust threshold as needed
-#             return True
-
-#     return False
-
-# # -------------------- HTTP Request Handlers --------------------
-# @csrf_exempt
-# def get_response(request):
-#     """Handle HTTP requests and return chatbot responses as JSON."""
-#     global conversation_history
-#     if request.method == 'POST':
-#         data = json.loads(request.body)
-#         user_message = data.get('prompt', '')
-#         logging.debug(f"User message: {user_message}")  # Log the user message
-#         if user_message:
-#             # Preprocess the user message
-#             preprocessed_message = user_message.strip().lower()
-#             logging.debug(f"Preprocessed message: {preprocessed_message}")  # Log the preprocessed message
-
-#             # Handle date-related queries first
-#             date_related_response = handle_date_related_queries(preprocessed_message)
-#             if date_related_response:
-#                 conversation_history.append((user_message, date_related_response))
-#                 save_conversation_to_file(user_message, date_related_response)
-#                 return JsonResponse({'text': date_related_response})
-
-#             # Handle time-based greetings
-#             time_based_response = handle_time_based_greeting(preprocessed_message)
-#             if time_based_response:
-#                 conversation_history.append((user_message, time_based_response))
-#                 save_conversation_to_file(user_message, time_based_response)
-#                 return JsonResponse({'text': time_based_response})
-
-#             # Handle general NLP responses (e.g., "Hi", "Hello")
-#             nlp_response = generate_nlp_response(preprocessed_message)
-#             if nlp_response:
-#                 conversation_history.append((user_message, nlp_response))
-#                 save_conversation_to_file(user_message, nlp_response)
-#                 return JsonResponse({'text': nlp_response})
-
-#             # Handle contextual responses
-#             contextual_response = get_contextual_response(preprocessed_message)
-#             if contextual_response:
-#                 conversation_history.append((user_message, contextual_response))
-#                 save_conversation_to_file(user_message, contextual_response)
-#                 return JsonResponse({'text': contextual_response})
-
-#             # Handle classified queries
-#             category, response = classify_query(preprocessed_message)
-#             if response:
-#                 conversation_history.append((user_message, response))
-#                 save_conversation_to_file(user_message, response)
-#                 return JsonResponse({'text': response})
-
-#             # Handle priority responses (greetings, farewells, general responses)
-#             priority_response = get_priority_response(preprocessed_message)
-#             if priority_response:
-#                 conversation_history.append((user_message, priority_response))
-#                 save_conversation_to_file(user_message, priority_response)
-#                 return JsonResponse({'text': priority_response})
-
-#             # Use LLM only for small talk (general conversation topics)
-#             if is_general_conversation(preprocessed_message):
-#                 llm_response = get_response_gemini(preprocessed_message)
-#                 conversation_history.append((user_message, llm_response))
-#                 save_conversation_to_file(user_message, llm_response)
-#                 return JsonResponse({'text': llm_response})
-
-#             # If no match is found, return a default response
-#             default_response = "I'm sorry, I don't have information on that topic."
-#             conversation_history.append((user_message, default_response))
-#             save_conversation_to_file(user_message, default_response)
-#             return JsonResponse({'text': default_response})
-        
-#     return JsonResponse({'text': 'Invalid request'}, status=400)
-
-# @csrf_exempt
-# def clear_history(request):
-#     """Clear the conversation history."""
-#     global conversation_history
-#     if request.method == 'POST':
-#         conversation_history.clear()
-#         return JsonResponse({'status': 'success', 'message': 'Conversation history cleared.'})
-#     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
-
-# def chat(request):
-#     """Render the chatbot HTML template."""
-
-
-#     try:
-#         return render(request, 'chatbot.html')
-#     except Exception as e:
-#         logging.error(f"Error loading template: {e}")
-#         return JsonResponse({'error': str(e)}, status=500)
-
-# # -------------------- Speech and Listening Functions --------------------
-# def speak(text):
-#     """Convert chatbot's text response to speech using gTTS."""
-#     try:
-#         tts = gTTS(text=text, lang='en')
-#         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio_file:
-#             tts.save(temp_audio_file.name)
-#             temp_audio_path = temp_audio_file.name
-#         audio = AudioSegment.from_file(temp_audio_path, format="mp3")
-#         play(audio)
-#         os.remove(temp_audio_path)
-#     except Exception as e:
-#         print(f"An error occurred during text-to-speech conversion: {e}")
-
-# def listen():
-#     """Toggle microphone to listen continuously until user says 'bye' or 'exit'."""
-#     import sounddevice as sd
-#     import numpy as np
-#     from scipy.io.wavfile import write
-
-#     mic_active = False
-#     print("Press Enter to toggle the microphone on/off. Say 'bye' or 'exit' to stop completely.")
-
-#     while True:
-#         command = input("Press Enter to toggle mic or type 'exit' to quit: ").strip().lower()
-#         if command in ["exit", "bye", "bye bye"]:
-#             conversation_history.clear()
-#             print("Exiting the chat. Goodbye!")
-#             break
-
-#         mic_active = not mic_active
-#         if mic_active:
-#             print("Microphone is ON. Listening...")
-#             try:
-#                 duration = 15
-#                 audio = sd.rec(int(duration * 16000), samplerate=16000, channels=1, dtype='int16')
-#                 sd.wait()
-#                 with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio_file:
-#                     write(temp_audio_file.name, 16000, audio)
-#                     temp_audio_path = temp_audio_file.name
-#                 audio_segment = AudioSegment.from_wav(temp_audio_path)
-#                 mp3_path = temp_audio_path.replace(".wav", ".mp3")
-#                 audio_segment.export(mp3_path, format="mp3")
-#                 result = whisper_model.transcribe(temp_audio_path)
-#                 user_message = result["text"]
-#                 os.remove(temp_audio_path)
-#                 os.remove(mp3_path)
-#                 if "bye" in user_message.lower() or "exit" in user_message.lower():
-#                     conversation_history.clear()
-#                     print("Exiting the chat. Goodbye!")
-#                     mic_active = False
-#                     break
-#                 request = HttpRequest()
-#                 request.method = 'POST'
-#                 request.body = json.dumps({'prompt': user_message}).encode('utf-8')
-#                 response = get_response(request)
-#                 response_text = json.loads(response.content.decode('utf-8'))['text']
-#                 print(f"Chatbot: {response_text}")
-#             except Exception as e:
-#                 print(f"An error occurred: {e}")
-#         else:
-#             print("Microphone is OFF. Press Enter to toggle it back on.")
-
-
-# -------------------- Enhanced Gemini Handler --------------------
-def get_response_gemini(prompt, conversation_context=None):
-    """Enhanced Gemini handler that processes all queries with strict guidelines"""
+# -------------------- Enhanced Gemini Integration --------------------
+def get_gemini_response_with_context(user_query):
+    """Get response using Gemini with website context"""
     try:
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        # System prompt with strict rules
-        system_prompt = f"""You are a support assistant for Indeed Inspiring Infotech.
+        # Find most relevant page content
+        best_match = None
+        best_score = 0
+        query_keywords = set(user_query.lower().split())
+        
+        for url, data in WEBSITE_INDEX.items():
+            page_keywords = set(data['text'].lower().split())
+            match_score = len(query_keywords & page_keywords)
+            if match_score > best_score:
+                best_match = data
+                best_score = match_score
+        
+        # Prepare context
+        context = ""
+        if best_match and best_score > 2:  # Minimum keyword matches
+            context = f"Relevant page content from {best_match['title']}:\n{best_match['text'][:2000]}..."
+        
+        prompt = f"""You are a support assistant for Indeed Inspiring Infotech.
         Strict Rules:
-        1. ALWAYS respond in 1-2 short sentences
-        2. Only use information from https://indeedinspiring.com
-        3. For greetings/small talk, respond professionally but briefly
-        4. For company info, provide accurate details
-        5. For unknown queries: "I don't have information about that"
-        6. Never invent information
+        1. ONLY use information from the provided context
+        2. If unsure, only say "I am still learning "
+        3. Keep responses concise (1-2 sentences)
+        4. Always include the source URL if available
         
-        Current Context: {conversation_context or 'No specific context'}
-        """
+        Context: {context}
         
-        response = model.generate_content(
-            system_prompt + "\nUser Query: " + prompt,
-            generation_config={
-                "max_output_tokens": 150,
-                "temperature": 0.3
-            }
-        )
+        User Query: {user_query}
+        
+        Response:"""
+        
+        response = model.generate_content(prompt)
         return response.text
+        
     except Exception as e:
-        logging.error(f"Gemini error: {str(e)}")
-        return "I encountered an error processing your request."
+        return f"I encountered an error: {str(e)}"
 
 # -------------------- Unified Response Handler --------------------
-def get_final_response(user_message):
-    """Handle all responses through a unified pipeline"""
-    # Preprocess input
-    processed_input = preprocess_recognized_text(user_message.lower())
+def get_final_response(user_input):
+    """Complete response pipeline with website fallback"""
+    # 1. Preprocess input
+    processed_input = preprocess_recognized_text(user_input.lower())
     
-    # Build conversation context
-    context_parts = []
-    if conversation_history:
-        last_exchange = conversation_history[-1]
-        context_parts.append(f"Previous: User said '{last_exchange[0]}', you responded '{last_exchange[1]}'")
-    context = " | ".join(context_parts) if context_parts else "New conversation"
+    # 2. Try direct company responses first
+    company_response = get_company_response(processed_input)
+    if company_response:
+        return company_response
     
-    # Special case handlers (in order of priority)
-    handlers = [
+    # 3. Handle special cases (time, greetings etc.)
+    special_handlers = [
         handle_date_related_queries,
         handle_time_based_greeting,
         generate_nlp_response,
@@ -582,24 +403,46 @@ def get_final_response(user_message):
         get_priority_response
     ]
     
-    # Try each handler in order
-    for handler in handlers:
+    for handler in special_handlers:
         response = handler(processed_input)
         if response:
             return response
     
-    # Final fallback to Gemini for everything else
-    return get_response_gemini(user_message, context)
+    # 4. Final fallback to Gemini with website context
+    return get_gemini_response_with_context(processed_input)
 
-# -------------------- Modified HTTP Handler --------------------
+def get_company_response(query):
+    """Handle company-specific questions with high accuracy"""
+    # Standardize the query first
+    query = enhance_speech_recognition(query.lower())
+    
+    # Enhanced FAQ matching
+    faq_mapping = {
+        r"(founder|who\s*started|ceo|owner)": 
+            "Indeed Inspiring Infotech was founded by Mr. Kushal Sharma.",
+        r"(contact|reach|phone|email|address)": 
+            "You can contact us at:\nPhone: +1 (123) 456-7890\nEmail: info@indeedinspiring.com",
+        r"(services|offerings|what\s*you\s*do)":
+            "We specialize in AI solutions, web development, and digital transformation services.",
+        r"(about|information|tell\s*me\s*about)":
+            "Indeed Inspiring Infotech is a technology company focused on innovative IT solutions."
+    }
+    
+    for pattern, response in faq_mapping.items():
+        if re.search(pattern, query):
+            return response
+    
+    return None
+
+# -------------------- HTTP Request Handlers --------------------
 @csrf_exempt
 def get_response(request):
-    """Simplified HTTP handler using unified response system"""
+    """Handle HTTP requests and return chatbot responses as JSON."""
     global conversation_history
     if request.method == 'POST':
         data = json.loads(request.body)
         user_message = data.get('prompt', '')
-        
+        logging.debug(f"User message: {user_message}")
         if user_message:
             # Get response from unified handler
             bot_response = get_final_response(user_message)
@@ -612,31 +455,6 @@ def get_response(request):
     
     return JsonResponse({'text': 'Invalid request'}, status=400)
 
-# -------------------- Enhanced Speech Recognition --------------------
-def enhance_speech_recognition(text):
-    """Improved speech recognition correction"""
-    corrections = {
-        r"\b(indian|india|indexing)\b": "indeed",
-        r"\b(inspire ring|inspiron)\b": "inspiring",
-        r"\b(info tech)\b": "infotech",
-        r"\b(crushal)\b": "prushal"
-    }
-    
-    # Apply corrections
-    for pattern, replacement in corrections.items():
-        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
-    
-    # Standardize company name
-    text = re.sub(r"\b(indeed\s*inspiring\s*(infotech|info\s*tech)?)\b", 
-                 "Indeed Inspiring Infotech", text, flags=re.IGNORECASE)
-    
-    return text.strip()
-
-# Update preprocess_recognized_text to use the enhanced version
-preprocess_recognized_text = enhance_speech_recognition
-
-# -------------------- Modified Listen Function --------------------
-
 @csrf_exempt
 def clear_history(request):
     """Clear the conversation history."""
@@ -648,8 +466,6 @@ def clear_history(request):
 
 def chat(request):
     """Render the chatbot HTML template."""
-
-
     try:
         return render(request, 'chatbot.html')
     except Exception as e:
@@ -670,7 +486,6 @@ def speak(text):
     except Exception as e:
         print(f"An error occurred during text-to-speech conversion: {e}")
 
-        
 def listen():
     """Enhanced voice interaction with better error handling"""
     import sounddevice as sd
@@ -714,3 +529,122 @@ def listen():
         except Exception as e:
             print(f"Error: {e}")
             speak("Sorry, I encountered an error. Please try again.")
+
+
+
+# Add this near your other imports
+trees_path = os.path.join(script_dir, 'json_files', 'trees.json')
+
+# Load trees data if the file exists
+trees_data = {}
+if os.path.exists(trees_path):
+    with open(trees_path, 'r', encoding='utf-8') as f:
+        try:
+            trees_data = json.load(f)
+        except json.JSONDecodeError:
+            trees_data = {}
+
+# -------------------- Give Me Trees Foundation Handler --------------------
+@csrf_exempt
+def gmtt_response(request):
+    """Handle requests specifically for Give Me Trees Foundation"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_message = data.get('prompt', '').lower()
+            
+            # Check if this is a trees-related query
+            tree_keywords = ["tree", "plant", "forest", "environment", "gmtt", "give me trees"]
+            if not any(keyword in user_message for keyword in tree_keywords):
+                return JsonResponse({
+                    'text': "I'm the Give Me Trees specialist. Please ask me about tree planting or environmental conservation."
+                })
+            
+            # Try to get response from trees.json first
+            response = get_trees_response(user_message)
+            if response:
+                return JsonResponse({'text': response})
+            
+            # Fallback to Gemini with trees context
+            gemini_response = get_gemini_trees_response(user_message)
+            return JsonResponse({'text': gemini_response})
+            
+        except Exception as e:
+            logging.error(f"Error in gmtt_response: {e}")
+            return JsonResponse({
+                'text': "Sorry, I encountered an error processing your trees-related request."
+            }, status=500)
+    
+    return JsonResponse({'text': 'Invalid request method'}, status=400)
+
+def get_trees_response(query):
+    """Get response from trees.json data"""
+    if not trees_data:
+        return None
+        
+    # Standardize query
+    query = query.translate(str.maketrans('', '', string.punctuation)).lower()
+    
+    # Check exact matches first
+    for item in trees_data.get('faqs', []):
+        if query == item['question'].lower():
+            return random.choice(item['responses'])
+    
+    # Check keywords
+    best_match = None
+    best_score = 0
+    
+    for item in trees_data.get('faqs', []):
+        for keyword in item.get('keywords', []):
+            score = fuzz.ratio(query, keyword.lower())
+            if score > best_score and score > 70:  # 70% match threshold
+                best_score = score
+                best_match = item
+    
+    if best_match:
+        return random.choice(best_match['responses'])
+    
+    return None
+
+def get_gemini_trees_response(query):
+    """Get trees-specific response from Gemini"""
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Basic trees context
+        context = """
+        Give Me Trees Foundation is a non-profit organization dedicated to environmental conservation through tree planting.
+        Key Information:
+        - Founded in 1978 by Kuldeep Bharti
+        - Headquarters in New Delhi, India
+        - Planted over 20 million trees
+        - Focus areas: Urban greening, rural afforestation, environmental education
+        - Website: https://www.givemetrees.org
+        """
+        
+        prompt = f"""You are a specialist assistant for Give Me Trees Foundation.
+        Rules:
+        1. Only provide information about tree planting and environmental conservation
+        2. For other topics, respond "I specialize in tree-related questions"
+        3. Keep responses under 3 sentences
+        4. Always mention the website givemetrees.org
+        
+        Context: {context}
+        
+        Query: {query}
+        
+        Response:"""
+        
+        response = model.generate_content(prompt)
+        return response.text
+        
+    except Exception as e:
+        return "I'm having trouble accessing tree information right now. Please visit givemetrees.org for details."
+    
+def gmtt(request):
+    """Render the chatbot HTML template."""
+    try:
+        return render(request, 'give_me_tree.html')
+    except Exception as e:
+        logging.error(f"Error loading template: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
