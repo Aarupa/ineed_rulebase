@@ -673,6 +673,9 @@ import whisper
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+import spacy
+import nltk
+import google.generativeai as genai
 
 # Django imports
 from django.http import JsonResponse, HttpRequest
@@ -738,6 +741,41 @@ paths = {
 # -------------------- Initialize Services --------------------
 genai.configure(api_key=API_KEY)
 conversation_history = []
+
+
+
+# -------------------- Knowledge Base Loader --------------------
+def load_knowledge_base(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            knowledge_base = []
+            for item in data.get('faqs', []):
+                entry = {
+                    'question': item['question'],
+                    'keywords': [k.lower() for k in item.get('keywords', [])],
+                    'responses': item['responses'],
+                    'patterns': [re.compile(r'\b' + re.escape(k) + r'\b', re.IGNORECASE) 
+                               for k in item.get('keywords', [])]
+                }
+                knowledge_base.append(entry)
+            return knowledge_base
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logging.error(f"Error loading {file_path}: {e}")
+        return []
+
+# Load knowledge bases
+indeed_kb = load_knowledge_base(paths['indeed_kb'])
+gmtt_kb = load_knowledge_base(paths['gmtt_kb'])
+
+
+
+def load_json_file(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
 
 # -------------------- Website Crawler --------------------
 def crawl_website(base_url, max_pages=10):
@@ -887,6 +925,56 @@ def handle_date_related_queries(msg):
     
     return None
 
+# -------------------- Knowledge Search --------------------
+def search_knowledge(query, knowledge_base):
+    query = query.lower()
+    
+    # Check exact matches first
+    for entry in knowledge_base:
+        if entry['question'].lower() == query:
+            return random.choice(entry['responses'])
+    
+    # Check keyword patterns
+    for entry in knowledge_base:
+        for pattern in entry['patterns']:
+            if pattern.search(query):
+                return random.choice(entry['responses'])
+    
+    # Fuzzy match fallback
+    best_match = None
+    best_score = 0
+    for entry in knowledge_base:
+        for keyword in entry['keywords']:
+            score = fuzz.ratio(query, keyword)
+            if score > best_score and score > 70:
+                best_score = score
+                best_match = entry
+    
+    return random.choice(best_match['responses']) if best_match else None
+
+# -------------------- Chatbot Handlers --------------------
+def handle_general_conversation(message):
+    message = message.lower()
+    
+    # Time-based
+    current_hour = datetime.now().hour
+    if "good morning" in message:
+        return "Good morning!" if current_hour < 12 else "It's actually afternoon, but hello!"
+    elif "good afternoon" in message:
+        return "Good afternoon!" if 12 <= current_hour < 18 else "It's actually evening, but hello!"
+    
+    # Date-based
+    today = datetime.now()
+    if "today" in message:
+        return f"Today is {today.strftime('%A, %B %d, %Y')}"
+    
+    # Greetings
+    greetings = load_json_file(paths['greetings']).get('greetings', {})
+    if message in greetings.get('inputs', []):
+        return random.choice(greetings.get('responses', []))
+    
+    return None
+
 def generate_nlp_response(msg):
     """Generate a basic NLP response for general conversation."""
     doc = nlp(msg)
@@ -964,6 +1052,7 @@ def get_gemini_indeed_response(user_query):
     try:
         model = genai.GenerativeModel('gemini-1.5-flash')
         
+        # Find most relevant page content from crawled website
         best_match = None
         best_score = 0
         query_keywords = set(user_query.lower().split())
@@ -975,16 +1064,26 @@ def get_gemini_indeed_response(user_query):
                 best_match = data
                 best_score = match_score
         
-        context = ""
-        if best_match and best_score > 2:
-            context = f"Relevant page content from {best_match['title']}:\n{best_match['text'][:2000]}..."
+        # Prepare context - start with basic company info
+        context = """
+        Indeed Inspiring Infotech is a technology company providing innovative IT solutions.
+        Key Information:
+        - Founded by Kushal Sharma
+        - Specializes in AI, web development, and digital transformation
+        - Website: https://indeedinspiring.com
+        """
         
-        prompt = f"""You are a support assistant for Indeed Inspiring Infotech.
-        Rules:
-        1. ONLY use information from the provided context
-        2. If unsure, say "I'm still learning about Indeed Inspiring Infotech"
-        3. Keep responses concise (1-2 sentences)
-        4. Always include the source URL if available
+        # Add relevant page content if found
+        if best_match and best_score > 2:  # Minimum keyword matches
+            context += f"\n\nRelevant page content from {best_match['title']}:\n{best_match['text'][:2000]}..."
+        
+        prompt = f"""You are a specialist assistant for Indeed Inspiring Infotech.
+        Strict Rules:
+        1. Only provide information about Indeed Inspiring Infotech and its services
+        2. For other topics, respond "I specialize in Indeed Inspiring Infotech related questions"
+        3. Keep responses concise (1 sentences maximum)
+        4. Always mention to visit indeedinspiring.com for more details
+        5. If you don't know the answer, say "I'm still learning about this topic. Please check our website indeedinspiring.com"
         
         Context: {context}
         
@@ -996,7 +1095,7 @@ def get_gemini_indeed_response(user_query):
         return response.text
         
     except Exception as e:
-        return f"I encountered an error: {str(e)}"
+        return "I'm having trouble accessing company information right now. Please visit indeedinspiring.com for details."
 
 def get_indeed_response(user_input):
     """Complete Indeed chatbot response pipeline"""
@@ -1005,46 +1104,101 @@ def get_indeed_response(user_input):
         return f"My name is {CHATBOT_NAME}. How can I assist you with Indeed Inspiring Infotech?"
     
     # 1. Handle general conversation
+    # general_response = handle_general_conversation(user_input)
+    # if general_response:
+    #     return general_response
+    
+    # # 2. Check for company-specific responses
+    # company_response = get_company_response(user_input)
+    # if company_response:
+    #     return company_response
+    
+    # # 3. Fallback to Gemini with Indeed context
+    # return get_gemini_indeed_response(user_input)
+    kb_response = search_knowledge(user_input, indeed_kb)
+    if kb_response:
+        return kb_response
+    
+    # Handle general conversation
     general_response = handle_general_conversation(user_input)
     if general_response:
         return general_response
     
-    # 2. Check for company-specific responses
-    company_response = get_company_response(user_input)
-    if company_response:
-        return company_response
-    
-    # 3. Fallback to Gemini with Indeed context
+    # Fallback to Gemini
+    # return get_gemini_response(user_input, "Indeed Inspiring Infotech")
     return get_gemini_indeed_response(user_input)
 
 # -------------------- Give Me Trees Chatbot --------------------
 def get_trees_response(query):
-    """Get response from trees.json data"""
-    if not trees_data:
-        return None
+    # """Get response from trees.json data"""
+    # if not trees_data:
+    #     return None
         
+    # query = query.translate(str.maketrans('', '', string.punctuation)).lower()
+    
+    # # Check exact matches
+    # for item in trees_data.get('faqs', []):
+    #     if query == item['question'].lower():
+    #         return random.choice(item['responses'])
+    
+    # # Check keywords
+    # best_match = None
+    # best_score = 0
+    
+    # for item in trees_data.get('faqs', []):
+    #     for keyword in item.get('keywords', []):
+    #         score = fuzz.ratio(query, keyword.lower())
+    #         if score > best_score and score > 70:
+    #             best_score = score
+    #             best_match = item
+    
+    # if best_match:
+    #     return random.choice(best_match['responses'])
+    
+    # return None
+
     query = query.translate(str.maketrans('', '', string.punctuation)).lower()
     
-    # Check exact matches
-    for item in trees_data.get('faqs', []):
-        if query == item['question'].lower():
-            return random.choice(item['responses'])
+    # Handle identity questions
+    identity_phrases = [
+        "what is your name",
+        "who are you",
+        "your foundation",
+        "your organization",
+        "about you",
+        "location of your",
+        "address of your"
+    ]
     
-    # Check keywords
-    best_match = None
-    best_score = 0
+    if any(phrase in query for phrase in identity_phrases):
+        kb_response = search_knowledge(query, gmtt_kb)
+        if kb_response:
+            return kb_response
+        if "name" in query:
+            return f"My name is {GMTT_NAME}."
+        if "location" in query or "address" in query:
+            return "We're headquartered in New Delhi, India."
+        return "I represent Give Me Trees Foundation."
     
-    for item in trees_data.get('faqs', []):
-        for keyword in item.get('keywords', []):
-            score = fuzz.ratio(query, keyword.lower())
-            if score > best_score and score > 70:
-                best_score = score
-                best_match = item
+    # Check knowledge base
+    kb_response = search_knowledge(query, gmtt_kb)
+    if kb_response:
+        return kb_response
     
-    if best_match:
-        return random.choice(best_match['responses'])
+    # General conversation
+    general_response = handle_general_conversation(query)
+    if general_response:
+        return general_response
     
-    return None
+    # Fallback to Gemini
+    return get_gemini_gmtt_response(query)
+
+
+def save_conversation_to_file(user_message, response):
+    """Save the conversation to a JSON file as key-value pairs."""
+    history[user_message] = response
+    with open(dialogue_history_path, 'w', encoding='utf-8') as f:
+        json.dump(history, f, indent=4, ensure_ascii=False)
 
 def get_gemini_gmtt_response(user_query):
     """Get trees-specific response from Gemini"""
