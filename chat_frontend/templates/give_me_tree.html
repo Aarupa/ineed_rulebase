@@ -1145,7 +1145,7 @@
         <div class="mic-status"></div>
     </div>
     <div class="chat-container">
-        <h1>InFi Chatbot</h1>
+        <h1>Give me trees</h1>
         <div id="chat-window">
             <div id="messages"></div>
         </div>
@@ -1495,3 +1495,604 @@
 </body>
 
 </html>
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TreeBot - Give Me Trees Foundation</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2e7d32; /* Forest green */
+            --secondary-color: #1b5e20; /* Darker green */
+            --accent-color: #8bc34a; /* Light green */
+            --text-color: #263238; /* Dark blue-gray */
+            --light-text: #f1f8e9; /* Light greenish white */
+            --background: rgba(232, 245, 233, 0.9); /* Very light green with transparency */
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --border-color: #c8e6c9; /* Light green border */
+            --shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            color: var(--text-color);
+            background: url('https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Voice Interface Styles */
+        .voice-interface {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .voice-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-color), var(--primary-color));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: var(--shadow);
+            border: 3px solid white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .voice-circle.active {
+            width: 250px;
+            height: 250px;
+            box-shadow: 0 0 30px rgba(139, 195, 74, 0.6);
+        }
+
+        .voice-circle::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="white" d="M50 20c-8.3 0-15 6.7-15 15v20c0 8.3 6.7 15 15 15s15-6.7 15-15V35c0-8.3-6.7-15-15-15zm22.5 15c0-12.4-10.1-22.5-22.5-22.5S27.5 22.6 27.5 35v20c0 12.4 10.1 22.5 22.5 22.5s22.5-10.1 22.5-22.5V35zM50 65c-5.5 0-10-4.5-10-10h-5c0 8.3 6.7 15 15 15v-5zm20-20h5v10h-5V45zm-40 0h5v10h-5V45z"/></svg>') no-repeat center center;
+            background-size: 50%;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        .voice-circle.active::before {
+            background-size: 40%;
+            opacity: 0.6;
+        }
+
+        .voice-circle.listening::before {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 0.6; }
+        }
+
+        .voice-status {
+            margin-top: 15px;
+            padding: 8px 16px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--primary-color);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            max-width: 80vw;
+            text-align: center;
+        }
+
+        .voice-status.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Chat Container Styles */
+        .chat-container {
+            display: none;
+            flex-direction: column;
+            width: 90%;
+            max-width: 500px;
+            max-height: 70vh;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1001;
+            border: 1px solid var(--border-color);
+        }
+
+        .chat-header {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .chat-header .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #chat-window {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: var(--background);
+        }
+
+        #messages {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-input-container {
+            display: flex;
+            padding: 10px 15px;
+            background: white;
+            border-top: 1px solid var(--border-color);
+        }
+
+        #prompt {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        #prompt:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(139, 195, 74, 0.3);
+        }
+
+        .send-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            background: var(--secondary-color);
+            transform: scale(1.05);
+        }
+
+        /* Control Buttons */
+        .control-btn {
+            position: fixed;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            z-index: 1002;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: var(--secondary-color);
+            transform: scale(1.1);
+        }
+
+        #toggle-chat-btn {
+            bottom: 100px;
+            right: 20px;
+        }
+
+        #help-btn {
+            bottom: 160px;
+            right: 20px;
+        }
+
+        /* Typing Indicators */
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 18px;
+            background: rgba(139, 195, 74, 0.1);
+            color: var(--primary-color);
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        .typing-dots {
+            display: inline-flex;
+            margin-left: 5px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(1) { animation-delay: 0s; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .voice-circle {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .voice-circle.active {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .chat-container {
+                width: 95%;
+                max-height: 80vh;
+            }
+        }
+    </style>
+</head>
+
+<body>
+   
+    <div class="voice-interface">
+        <div class="voice-circle" id="voice-btn">
+            <div class="voice-status" id="voice-status">Listening...</div>
+        </div>
+    </div>
+
+    
+    <div class="chat-container" id="chat-container">
+        <div class="chat-header">
+            <h2>TreeBot - Give Me Trees Foundation</h2>
+            <button class="close-btn" id="close-chat-btn">&times;</button>
+        </div>
+        <div id="chat-window">
+            <div id="messages"></div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" id="prompt" placeholder="Type your message...">
+            <button class="send-btn" id="send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+   
+    <button class="control-btn" id="toggle-chat-btn">
+        <i class="fas fa-comment-alt"></i>
+    </button>
+    <button class="control-btn" id="help-btn">
+        <i class="fas fa-question"></i>
+    </button>
+
+    <script>
+        // DOM Elements
+        const voiceBtn = document.getElementById('voice-btn');
+        const voiceStatus = document.getElementById('voice-status');
+        const chatContainer = document.getElementById('chat-container');
+        const toggleChatBtn = document.getElementById('toggle-chat-btn');
+        const closeChatBtn = document.getElementById('close-chat-btn');
+        const sendBtn = document.getElementById('send-btn');
+        const promptInput = document.getElementById('prompt');
+        const messagesContainer = document.getElementById('messages');
+        const helpBtn = document.getElementById('help-btn');
+
+        // State variables
+        let recognition;
+        let isListening = false;
+        let isBotSpeaking = false;
+        let conversationActive = false;
+        let wakeWordDetected = false;
+
+        // Initialize voice recognition
+        function initVoiceRecognition() {
+            if (!('webkitSpeechRecognition' in window)) {
+                voiceStatus.textContent = "Voice not supported in your browser";
+                voiceStatus.classList.add('show');
+                setTimeout(() => voiceStatus.classList.remove('show'), 3000);
+                return;
+            }
+
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = 'en-IN';
+
+            recognition.onstart = () => {
+                isListening = true;
+                voiceBtn.classList.add('listening');
+                updateVoiceStatus("Listening...");
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript.trim();
+                if (!transcript) return;
+
+                if (!wakeWordDetected) {
+                    if (transcript.toLowerCase().includes("treebot") || 
+                        transcript.toLowerCase().includes("hey tree") || 
+                        transcript.toLowerCase().includes("hi tree")) {
+                        wakeWordDetected = true;
+                        addBotMessage("Hello! I'm TreeBot from Give Me Trees Foundation. How can I help you today?");
+                        speakResponse("Hello! I'm TreeBot from Give Me Trees Foundation. How can I help you today?");
+                        return;
+                    }
+                    updateVoiceStatus("Say 'Hey TreeBot' to start");
+                    return;
+                }
+
+                addUserMessage(transcript);
+                
+                if (["exit", "quit", "goodbye", "bye"].some(word => 
+                    transcript.toLowerCase().includes(word))) {
+                    handleExitCommand();
+                    return;
+                }
+
+                processUserInput(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Recognition error:', event.error);
+                isListening = false;
+                voiceBtn.classList.remove('listening');
+                updateVoiceStatus("Error occurred. Try again.");
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                voiceBtn.classList.remove('listening');
+                if (conversationActive && !isBotSpeaking) {
+                    setTimeout(() => recognition.start(), 500);
+                }
+            };
+        }
+
+        // Voice control functions
+        function startListening() {
+            if (!recognition) initVoiceRecognition();
+            try {
+                recognition.start();
+                conversationActive = true;
+                voiceBtn.classList.add('active');
+            } catch (e) {
+                console.error("Recognition start error:", e);
+            }
+        }
+
+        function stopListening() {
+            if (recognition && isListening) {
+                recognition.stop();
+            }
+            voiceBtn.classList.remove('active');
+        }
+
+        function toggleListening() {
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        }
+
+        function updateVoiceStatus(text) {
+            voiceStatus.textContent = text;
+            voiceStatus.classList.add('show');
+            setTimeout(() => voiceStatus.classList.remove('show'), 3000);
+        }
+
+        // Chat functions
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.textContent = text;
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function addUserMessage(text) {
+            addMessage(text, true);
+        }
+
+        function addBotMessage(text) {
+            addMessage(text, false);
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <span>TreeBot is typing</span>
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+            messagesContainer.appendChild(typingDiv);
+            scrollToBottom();
+            return typingDiv;
+        }
+
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Speech synthesis
+        function speakResponse(text) {
+            if (isBotSpeaking) window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+            
+            utterance.onstart = () => {
+                isBotSpeaking = true;
+                voiceBtn.classList.add('listening');
+            };
+            
+            utterance.onend = () => {
+                isBotSpeaking = false;
+                voiceBtn.classList.remove('listening');
+                if (conversationActive) {
+                    setTimeout(() => recognition.start(), 500);
+                }
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Message processing
+        function processUserInput(input) {
+            const typingIndicator = showTypingIndicator();
+            
+            axios.post('/api/gmtt/', { prompt: input })
+                .then(response => {
+                    messagesContainer.removeChild(typingIndicator);
+                    addBotMessage(response.data.text);
+                    speakResponse(response.data.text);
+                })
+                .catch(error => {
+                    console.error(error);
+                    messagesContainer.removeChild(typingIndicator);
+                    addBotMessage("Sorry, I encountered an error. Please try again.");
+                });
+        }
+
+        function handleExitCommand() {
+            addBotMessage("Goodbye! Thank you for supporting Give Me Trees Foundation.");
+            speakResponse("Goodbye! Thank you for supporting Give Me Trees Foundation.");
+            stopListening();
+            conversationActive = false;
+            wakeWordDetected = false;
+            voiceBtn.classList.remove('active');
+        }
+
+        // Event listeners
+        voiceBtn.addEventListener('click', toggleListening);
+        
+        toggleChatBtn.addEventListener('click', () => {
+            chatContainer.style.display = chatContainer.style.display === 'flex' ? 'none' : 'flex';
+        });
+        
+        closeChatBtn.addEventListener('click', () => {
+            chatContainer.style.display = 'none';
+        });
+        
+        sendBtn.addEventListener('click', () => {
+            const message = promptInput.value.trim();
+            if (message) {
+                addUserMessage(message);
+                promptInput.value = '';
+                processUserInput(message);
+            }
+        });
+        
+        promptInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendBtn.click();
+            }
+        });
+        
+        helpBtn.addEventListener('click', () => {
+            addBotMessage("I'm TreeBot from Give Me Trees Foundation. You can ask me about tree planting, our initiatives, or how to get involved. Try saying 'Hey TreeBot' to start a voice conversation!");
+        });
+
+        // Initialize
+        initVoiceRecognition();
+    </script>
+</body>
+
+</html> -->
