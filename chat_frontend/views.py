@@ -652,7 +652,6 @@
 
 
 # -------------------- Imports --------------------
-# Standard library imports
 import os
 import json
 import random
@@ -663,8 +662,7 @@ from datetime import datetime, timedelta
 import string
 import threading
 import time
-
-# Third-party imports
+from fuzzywuzzy import fuzz, process
 from textblob import TextBlob
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from fuzzywuzzy import fuzz, process
@@ -681,12 +679,7 @@ from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 
-import spacy
-import nltk
-import google.generativeai as genai
-
-# -------------------- Constants and Configurations --------------------
-# File paths
+# -------------------- Constants --------------------
 script_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(script_dir, 'json_files', 'content.json')
 dialogue_history_path = os.path.join(script_dir, 'json_files', 'history.json')
@@ -731,7 +724,20 @@ GMTT_NAME = "Infi"
 
 # Gemini API configuration
 API_KEY = "AIzaSyA4bFTPKOQ3O4iKLmvQgys_ZjH_J1MnTUs"
+
+# -------------------- File Paths --------------------
+paths = {
+    'indeed_kb': os.path.join(script_dir, 'json_files', 'indeed_knowledge.json'),
+    'gmtt_kb': os.path.join(script_dir, 'json_files', 'gmtt_knowledge.json'),
+    'history': os.path.join(script_dir, 'json_files', 'history.json'),
+    'greetings': os.path.join(script_dir, 'json_files', 'greetings.json'),
+    'farewells': os.path.join(script_dir, 'json_files', 'farewells.json'),
+    'general': os.path.join(script_dir, 'json_files', 'general.json')
+}
+
+# -------------------- Initialize Services --------------------
 genai.configure(api_key=API_KEY)
+conversation_history = []
 
 # -------------------- Website Crawler --------------------
 def crawl_website(base_url, max_pages=10):
@@ -770,10 +776,10 @@ INDEED_INDEX = crawl_website("https://indeedinspiring.com")
 GMTT_INDEX = crawl_website("https://www.givemetrees.org")
 
 # -------------------- Utility Functions --------------------
-def save_conversation_to_file(user_message, response):
-    """Save the conversation to a JSON file as key-value pairs."""
+def save_conversation(user_message, response):
+    history = load_json_file(paths['history'])
     history[user_message] = response
-    with open(dialogue_history_path, 'w', encoding='utf-8') as f:
+    with open(paths['history'], 'w', encoding='utf-8') as f:
         json.dump(history, f, indent=4, ensure_ascii=False)
 
 def correct_spelling(query):
