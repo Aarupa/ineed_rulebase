@@ -729,10 +729,7 @@
             height: 100vh;
             overflow: hidden;
             color: var(--text-color);
-            background-image: url('https://images.unsplash.com/photo-1476231682828-37e571bc172f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%);
         }
 
         .mic-container {
@@ -748,10 +745,10 @@
             z-index: 1000;
             width: 120px;
             height: 120px;
-            border-radius: 50%;
-            background-color: var(--primary-color);
-            box-shadow: var(--shadow);
-            border: 3px solid var(--accent-color);
+            /* border-radius: 50%; */
+            /* background-color: var(--primary-color);
+            box-shadow: var(--shadow); */
+            /* border: 3px solid var(--accent-color); */
         }
 
         .mic-container.active {
@@ -761,16 +758,16 @@
             transform: translate(-50%, -50%);
             width: 300px;
             height: 300px;
-            border-radius: 50%;
+            /* border-radius: 50%;
             background-color: var(--primary-color);
-            background-image: radial-gradient(circle, var(--accent-color) 0%, var(--primary-color) 70%);
+            background-image: radial-gradient(circle, var(--accent-color) 0%, var(--primary-color) 70%); */
         }
 
         .mic-container.active #mic-btn {
             width: 280px;
             height: 280px;
-            border-radius: 50%;
-            border: 5px solid var(--accent-color);
+            /* border-radius: 50%;
+            border: 5px solid var(--accent-color); */
         }
 
         .mic-container.active #mic-btn img {
